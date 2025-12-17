@@ -135,6 +135,8 @@ class BatchHttpAPI(BentoHttpAPI):
             The input symbology type to resolve from.
         stype_out : SType or str, default 'instrument_id'
             The output symbology type to resolve to.
+            Must be a valid symbology combination with `stype_in`.
+            See `symbology combinations`. https://www.databento.com/standards-and-conventions/symbology#supported-symbology-combinations
         limit : int, optional
             The maximum number of records to return. If `None` then no limit.
 

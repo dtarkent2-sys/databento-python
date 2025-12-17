@@ -50,6 +50,8 @@ class SymbologyHttpAPI(BentoHttpAPI):
             The input symbology type to resolve from.
         stype_out : SType or str, default 'instrument_id'
             The output symbology type to resolve to.
+            Must be a valid symbology combination with `stype_in`.
+            See `symbology combinations`. https://www.databento.com/standards-and-conventions/symbology#supported-symbology-combinations
         start_date : date or str
             The inclusive UTC start date of the request range.
         end_date : date or str, optional
