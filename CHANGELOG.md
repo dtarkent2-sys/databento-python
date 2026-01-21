@@ -4,16 +4,18 @@
 
 #### Enhancements
 - Added new off-market publisher for Cboe Futures Exchange (`XCBF_PITCH_XOFF`)
-- Added new `StatType` variants to be used by `XCBF.PITCH` dataset:
-  - `UPPER_PRICE_LIMIT`
-  - `LOWER_PRICE_LIMIT`
-  - `BLOCK_VOLUME`
-  - `VENUE_SPECIFIC_VOLUME_1`
+- Upgraded `databento-dbn` to 0.47.0:
+  - Changed the `__repr__` implementation of all records in Python to be more Pythonic
+  - Added new `StatType` variants to be used by `XCBF.PITCH` dataset:
+    - `UPPER_PRICE_LIMIT`
+    - `LOWER_PRICE_LIMIT`
+    - `BLOCK_VOLUME`
+    - `VENUE_SPECIFIC_VOLUME_1`
 
 ## 0.69.0 - 2026-01-13
 
 #### Enhancements
-- Upgraded `databento-dbn` to 0.46.0
+- Upgraded `databento-dbn` to 0.46.0:
   - Added `DBNRecord` union type to Python which includes all record types
   - Removed `Record` class from Python type stubs to match code: the record classes don't
     share a base class. Use `DBNRecord` instead.
@@ -38,7 +40,7 @@ This release adds support for Python 3.14.
 #### Enhancements
 - Added support for Python 3.14
 - Functions which accept a path as an argument now expand user directories
-- Upgraded `databento-dbn` to 0.45.0
+- Upgraded `databento-dbn` to 0.45.0:
   - Added support for Python 3.14
 
 ## 0.67.0 - 2025-12-02
@@ -60,7 +62,7 @@ This release adds support for Python 3.14.
 - Added a property `Live.session_id` which returns the streaming session ID when the client is connected
 - Streams added with `Live.add_stream()` which do not define an exception handler will now emit a warning if an exception is raised while executing the callback
 - Callback functions added with `Live.add_callback()` which do not define an exception handler will now emit a warning if an exception is raised while executing the callback
-- Upgraded `databento-dbn` to 0.44.0
+- Upgraded `databento-dbn` to 0.44.0:
   - Added logic to set `code` when upgrading version 1 `SystemMsg` to newer versions
 
 #### Bug fixes
@@ -73,7 +75,7 @@ This release adds support for Python 3.14.
 
 #### Enhancements
 - Added export of `CBBOMsg` and `BBOMsg` from `databento_dbn` to the root `databento` package
-- Upgraded `databento-dbn` to 0.43.0
+- Upgraded `databento-dbn` to 0.43.0:
     - Added export of `F_PUBLISHER_SPECIFIC` constant to Python
     - Added explicit `Unset` variant for `SystemCode` and `ErrorCode`
     - Changed Python getters for enum fields to return the underlying type when no known variant can be found. As a result, these getters no longer raise an exception
@@ -84,7 +86,7 @@ This release adds support for Python 3.14.
 ## 0.64.0 - 2025-09-30
 
 #### Enhancements
-- Upgraded `databento-dbn` to 0.42.0
+- Upgraded `databento-dbn` to 0.42.0:
   - Added `ts_index` and `pretty_ts_index` properties for records in Python which provides the timestamp that is most appropriate for indexing
   - Fixed type stub for `channel_id` to allow None
 
@@ -109,7 +111,7 @@ This release delivers a number of breaking changes to the Python interface for D
 
 #### Breaking changes
 - Removed `bill_id` from the response of `batch.list_jobs()` and `batch.submit_job()`
-- Upgraded `databento-dbn` to 0.40.0
+- Upgraded `databento-dbn` to 0.40.0:
   - Removed `hd` property from records in Python. Header fields are accessible
     directly from the record
   - Removed ability to directly instantiate most enums from an `int` in Python and coercion
@@ -152,7 +154,7 @@ This release delivers a number of breaking changes to the Python interface for D
 
 #### Enhancements
 - Added `parquet_schema` option to `DBNStore.to_parquet()` for overriding the pyarrow schema.
-- Upgraded `databento-dbn` to 0.39.0
+- Upgraded `databento-dbn` to 0.39.0:
   - Added `side()` and `unpaired_side()` methods to `ImbalanceMsg` that convert the fields
     of the same name to the `Side` enum
   - Added `pretty_auction_time` property in Python for `ImbalanceMsg`
@@ -173,7 +175,7 @@ Python
 ## 0.59.0 - 2025-07-15
 
 #### Enhancements
-- Upgraded `databento-dbn` to 0.37.1
+- Upgraded `databento-dbn` to 0.37.1:
   - Fix buffer growth in `DbnFsm::write_all()`, which is used by `DBNDecoder.write()`
 
 #### Breaking changes
@@ -188,7 +190,7 @@ Python
 #### Enhancements
 - Changed the `tz` parameter in `DBNStore.to_df()` to accept `datetime.tzinfo` instead of `pytz.BaseTzInfo` explicitly
 - Modified the dependency specification for `databento_dbn` to allow for compatible patch versions
-- Upgraded `databento-dbn` to 0.36.2
+- Upgraded `databento-dbn` to 0.36.2:
   - Fixed change in behavior where Python `DBNDecoder.decode()` wouldn't always decode all available data on the first call
 
 ## 0.57.1 - 2025-06-17
@@ -197,7 +199,7 @@ Python
 - Changed the following Venue, Publisher, and Dataset descriptions:
   - "ICE Futures Europe (Financials)" renamed to "ICE Europe Financials"
   - "ICE Futures Europe (Commodities)" renamed to "ICE Europe Commodities"
-- Upgraded `databento-dbn` to 0.36.1
+- Upgraded `databento-dbn` to 0.36.1:
   - Fixed setting of `ts_out` property of DbnFsm based on decoded metadata. This
 was preventing `ts_out` from being correctly decoded in the Python DBNDecoder
   - Fixed decoding of `ts_out` with first records in DBNDecoder
@@ -208,7 +210,7 @@ was preventing `ts_out` from being correctly decoded in the Python DBNDecoder
 ## 0.57.0 - 2025-06-10
 
 #### Enhancements
-- Upgraded `databento-dbn` to 0.36.0
+- Upgraded `databento-dbn` to 0.36.0:
   - Added missing Python type stubs for several leg properties of `InstrumentDefMsg`
 
 #### Bug fixes
@@ -283,7 +285,7 @@ was preventing `ts_out` from being correctly decoded in the Python DBNDecoder
 - Added `exchanges` parameter to `Reference.corporate_actions.get_range(...)`
 - Added `is_last` field to live subscription requests which will be used to improve
   the handling of split subscription requests
-- Upgraded `databento-dbn` to 0.35.0
+- Upgraded `databento-dbn` to 0.35.0:
   - This version delivers DBN version 3 (DBNv3), which is the new default
   - Improved the performance of the Python `DBNDecoder`
 
@@ -300,7 +302,7 @@ was preventing `ts_out` from being correctly decoded in the Python DBNDecoder
 ## 0.53.0 - 2025-04-29
 
 #### Enhancements
-- Upgraded `databento-dbn` to 0.33.1
+- Upgraded `databento-dbn` to 0.33.1:
   - Added `SystemCode` and `ErrorCode` enums to indicate types of system and error messages
   - Added `code()` methods to SystemMsg and ErrorMsg to retrieve the enum value if one exists and equivalent properties in Python
 
@@ -311,7 +313,7 @@ was preventing `ts_out` from being correctly decoded in the Python DBNDecoder
 
 #### Enhancements
 - Added new optional `id` field to `SubscriptionRequest` class which will be used for improved error messages
-- Upgraded `databento-dbn` to 0.32.0
+- Upgraded `databento-dbn` to 0.32.0:
   - Fixed `RType` variant names in Python to match `Schema`
   - Added missing Python type declarations for `RType` variants
   - Fixed issue with Python `_hidden_fields` definition that caused `KeyError: _reserved1_00`
@@ -320,7 +322,7 @@ was preventing `ts_out` from being correctly decoded in the Python DBNDecoder
 ## 0.51.0 - 2025-04-08
 
 #### Enhancements
-- Upgraded `databento-dbn` to 0.31.0
+- Upgraded `databento-dbn` to 0.31.0:
   - Fixed Python type annotation for `SystemMsg.is_heartbeat()` method that was previously annotated as a property
 
 ## 0.50.0 - 2025-03-18
@@ -346,7 +348,7 @@ was preventing `ts_out` from being correctly decoded in the Python DBNDecoder
   - `UNDEF_STAT_QUANTITY`
   - `UNDEF_TIMESTAMP`
 - Added export of `BidAskPair` and `ConsolidatedBidAskPair` from `databento_dbn` to the root `databento` package
-- Upgraded `databento-dbn` to 0.29.0
+- Upgraded `databento-dbn` to 0.29.0:
   - Added `COMMODITY_SPOT` `InstrumentClass` variant
 - Improved handling of `datetime` and `date` objects in `start` and `end` parameters
 
@@ -368,7 +370,7 @@ was preventing `ts_out` from being correctly decoded in the Python DBNDecoder
 - Added export of `TradingEvent` enum from `databento_dbn` to the root `databento` package
 - Added new dataset `EQUS.MINI` and new publishers `EQUS.MINI.EQUS`, `XNYS.TRADES.EQUS`
 - Removed upper bound for supported `python` versions; the constraint is now `^3.9`
-- Upgraded `databento-dbn` to 0.27.0
+- Upgraded `databento-dbn` to 0.27.0:
     - Fixed export of `InstrumentDefMsgV3` to Python
 
 #### Bug fixes
@@ -378,7 +380,7 @@ was preventing `ts_out` from being correctly decoded in the Python DBNDecoder
 ## 0.47.0 - 2024-12-17
 
 #### Enhancements
-- Upgraded `databento-dbn` to 0.25.0
+- Upgraded `databento-dbn` to 0.25.0:
     - Added type aliases for `TBBOMsg`, `BBO1SMsg`, `BBO1MMsg`, `TCBBOMsg`, `CBBO1SMsg`,
       `CBBO1MMsg` in Python
 - Removed exports for `CBBOMsg` and `BBOMsg` in the root `databento` package in favor of aliased versions from `databento-dbn`
@@ -387,7 +389,7 @@ was preventing `ts_out` from being correctly decoded in the Python DBNDecoder
 
 #### Enhancements
 - Removed deprecated `packaging` parameter from `Historical.batch.submit_job`. Job files can be downloaded individually or as zip files after the job completes
-- Upgraded `databento-dbn` to 0.24.0
+- Upgraded `databento-dbn` to 0.24.0:
     - Added handling for `UNDEF_TIMESTAMP` in `pretty_` timestamp getters for Python. They now return `None` in the case of `UNDEF_TIMESTAMP`
 
 ## 0.45.0 - 2024-11-12
@@ -397,7 +399,7 @@ This release adds support for Python 3.13.
 #### Enhancements
 - Added support for Python 3.13
 - Added new IntelligentCross venues `ASPN`, `ASMT`, and `ASPI`
-- Upgraded `databento-dbn` to 0.23.1
+- Upgraded `databento-dbn` to 0.23.1:
     - Fixed `pretty_activation` getter in `databento_dbn` returning `expiration` instead
     - Fixed some `pretty_` getters in `databento_dbn` didn't correctly handle `UNDEF_PRICE`
 

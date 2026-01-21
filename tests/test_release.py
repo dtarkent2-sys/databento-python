@@ -7,7 +7,7 @@ import re
 from datetime import date
 
 import pytest
-import tomllib
+import tomli
 
 import databento
 from tests import PROJECT_ROOT
@@ -43,7 +43,7 @@ def fixture_pyproject_version() -> str:
     """
     # Arrange, Act, Assert
     with open(PROJECT_ROOT / "pyproject.toml", "rb") as pyproject:
-        data = tomllib.load(pyproject)
+        data = tomli.load(pyproject)
     return data["project"]["version"]
 
 
