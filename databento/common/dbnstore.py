@@ -1528,8 +1528,7 @@ class DataFrameIterator:
 
         if price_type == PriceType.DECIMAL:
             df[px_fields] = (
-                df[px_fields].replace(UNDEF_PRICE, np.nan).applymap(decimal.Decimal)
-                / FIXED_PRICE_SCALE
+                df[px_fields].replace(UNDEF_PRICE, np.nan).map(decimal.Decimal) / FIXED_PRICE_SCALE
             )
         elif price_type == PriceType.FLOAT:
             df[px_fields] = df[px_fields].replace(UNDEF_PRICE, np.nan) / FIXED_PRICE_SCALE
