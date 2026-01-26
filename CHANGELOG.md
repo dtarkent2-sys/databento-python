@@ -12,6 +12,7 @@
     - `BLOCK_VOLUME`
     - `VENUE_SPECIFIC_VOLUME_1`
 - Added new publisher for Blue Ocean ATS (`OCEA_MEMOIR_OCEA`)
+- Reduced the log level of end-of-interval `SystemMsg` records to the debug level
 
 ## 0.69.0 - 2026-01-13
 
