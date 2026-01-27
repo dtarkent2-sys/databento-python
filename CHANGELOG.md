@@ -4,7 +4,7 @@
 
 #### Enhancements
 - Added new off-market publisher for Cboe Futures Exchange (`XCBF_PITCH_XOFF`)
-- Upgraded `databento-dbn` to 0.47.0:
+- Upgraded `databento-dbn` to 0.48.0:
   - Changed the `__repr__` implementation of all records in Python to be more Pythonic
   - Added new `StatType` variants to be used by `XCBF.PITCH` dataset:
     - `UPPER_PRICE_LIMIT`
