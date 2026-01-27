@@ -8,11 +8,11 @@ from pathlib import Path
 from typing import Any
 from typing import Literal
 from unittest.mock import MagicMock
+from zoneinfo import ZoneInfo
 
 import numpy as np
 import pandas as pd
 import pytest
-import pytz
 import zstandard
 from databento_dbn import Compression
 from databento_dbn import DBNRecord
@@ -1579,24 +1579,24 @@ def test_dbnstore_to_df_with_timezone(
 @pytest.mark.parametrize(
     "timezone",
     [
-        pytz.timezone("US/Central"),
-        pytz.timezone("US/Eastern"),
-        pytz.timezone("Europe/Vienna"),
-        pytz.timezone("Asia/Dubai"),
-        pytz.timezone("UTC"),
+        ZoneInfo("US/Central"),
+        ZoneInfo("US/Eastern"),
+        ZoneInfo("Europe/Vienna"),
+        ZoneInfo("Asia/Dubai"),
+        ZoneInfo("UTC"),
     ],
 )
 @pytest.mark.parametrize(
     "schema",
     [pytest.param(schema, id=str(schema)) for schema in Schema.variants()],
 )
-def test_dbnstore_to_df_with_pytz_timezone(
+def test_dbnstore_to_df_with_zoneinfo(
     test_data_path: Callable[[Dataset, Schema], Path],
     schema: Schema,
-    timezone: pytz.BaseTzInfo,
+    timezone: ZoneInfo,
 ) -> None:
     """
-    Test that setting the `tz` parameter in `DBNStore.to_df` accepts `pytz`
+    Test that setting the `tz` parameter in `DBNStore.to_df` accepts `ZoneInfo`
     timezone objects.
     """
     # Arrange

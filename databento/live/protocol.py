@@ -11,6 +11,7 @@ from databento_dbn import DBNRecord
 from databento_dbn import Metadata
 from databento_dbn import Schema
 from databento_dbn import SType
+from databento_dbn import SystemCode
 from databento_dbn import VersionUpgradePolicy
 
 from databento.common import cram
@@ -388,7 +389,12 @@ class DatabentoLiveProtocol(asyncio.BufferedProtocol):
                     if record.is_heartbeat():
                         logger.debug("gateway heartbeat")
                     else:
-                        logger.info(
+                        if record.code == SystemCode.END_OF_INTERVAL:
+                            system_msg_level = logging.DEBUG
+                        else:
+                            system_msg_level = logging.INFO
+                        logger.log(
+                            system_msg_level,
                             "system message code=%s msg='%s'",
                             record.code,
                             record.msg,
