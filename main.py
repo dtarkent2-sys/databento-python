@@ -72,9 +72,9 @@ def parse_occ_symbol(raw_symbol: str) -> dict | None:
         return None
 
     try:
-        # Find where the date digits start (first digit in the first 6 chars)
+        # Find where the date digits start (scan entire symbol for first digit)
         date_start = None
-        for i, ch in enumerate(raw_symbol[:6]):
+        for i, ch in enumerate(raw_symbol):
             if ch.isdigit():
                 date_start = i
                 break
