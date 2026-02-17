@@ -234,7 +234,7 @@ def on_record(record):
                 "type": "statistic",
                 "instrumentId": record.instrument_id,
                 "statType": getattr(record, "stat_type", None),
-                "quantity": to_price(getattr(record, "quantity", None)),
+                "quantity": getattr(record, "quantity", None),
                 "price": to_price(getattr(record, "price", None)),
                 **info,
                 "ts": ts_to_iso(getattr(record, "ts_event", None)),
