@@ -184,14 +184,30 @@ def enrich(instrument_id: int) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Record callback
+# Record callback with debug counters
 # ---------------------------------------------------------------------------
+
+_record_counts = {"trade": 0, "quote": 0, "definition": 0, "statistic": 0, "other": 0}
+_total_records = 0
+_LOG_INTERVAL = 5000  # Log stats every N records
 
 def on_record(record):
     """Handle each incoming Databento record."""
+    global _total_records
     try:
+        _total_records += 1
+
+        # Log record type name for first 20 records (helps identify SDK class names)
+        if _total_records <= 20:
+            print(f"[{datetime.now(timezone.utc)}] Record #{_total_records}: {type(record).__name__} (instrument_id={getattr(record, 'instrument_id', '?')})")
+
+        # Periodic stats
+        if _total_records % _LOG_INTERVAL == 0:
+            print(f"[{datetime.now(timezone.utc)}] Stats after {_total_records} records: {_record_counts} | instruments cached: {len(instruments)}")
+
         # -- Instrument Definition --
         if isinstance(record, db.InstrumentDefMsg):
+            _record_counts["definition"] += 1
             raw_symbol = getattr(record, "raw_symbol", "") or ""
             parsed = parse_occ_symbol(raw_symbol)
 
@@ -218,6 +234,7 @@ def on_record(record):
 
         # -- Trade --
         if isinstance(record, db.TradeMsg):
+            _record_counts["trade"] += 1
             info = enrich(record.instrument_id)
             payload = {
                 "type": "trade",
@@ -238,6 +255,7 @@ def on_record(record):
 
         # -- Statistics --
         if isinstance(record, db.StatMsg):
+            _record_counts["statistic"] += 1
             info = enrich(record.instrument_id)
             payload = {
                 "type": "statistic",
@@ -253,6 +271,7 @@ def on_record(record):
 
         # -- Quotes (CBBOMsg / MBP1Msg — anything with .levels) --
         if hasattr(record, "levels") and record.levels:
+            _record_counts["quote"] += 1
             info = enrich(record.instrument_id)
             level = record.levels[0]
             payload = {
@@ -271,7 +290,9 @@ def on_record(record):
             return
 
         # -- All other record types (SymbolMappingMsg, SystemMsg, etc.) --
-        # Skip silently
+        _record_counts["other"] += 1
+        if _record_counts["other"] <= 5:
+            print(f"[{datetime.now(timezone.utc)}] Unknown record type: {type(record).__name__} attrs={[a for a in dir(record) if not a.startswith('_')][:15]}")
         return
 
     except Exception as e:
