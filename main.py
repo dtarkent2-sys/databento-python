@@ -188,6 +188,7 @@ def enrich(instrument_id: int) -> dict:
 # ---------------------------------------------------------------------------
 
 _record_counts = {"trade": 0, "quote": 0, "definition": 0, "statistic": 0, "other": 0}
+_other_types = {}  # Track type names for "other" records
 _total_records = 0
 _LOG_INTERVAL = 5000  # Log stats every N records
 
@@ -203,7 +204,7 @@ def on_record(record):
 
         # Periodic stats
         if _total_records % _LOG_INTERVAL == 0:
-            print(f"[{datetime.now(timezone.utc)}] Stats after {_total_records} records: {_record_counts} | instruments cached: {len(instruments)}")
+            print(f"[{datetime.now(timezone.utc)}] Stats after {_total_records} records: {_record_counts} | other_types: {_other_types} | instruments cached: {len(instruments)}")
 
         # -- Instrument Definition --
         if isinstance(record, db.InstrumentDefMsg):
@@ -291,8 +292,10 @@ def on_record(record):
 
         # -- All other record types (SymbolMappingMsg, SystemMsg, etc.) --
         _record_counts["other"] += 1
+        tname = type(record).__name__
+        _other_types[tname] = _other_types.get(tname, 0) + 1
         if _record_counts["other"] <= 5:
-            print(f"[{datetime.now(timezone.utc)}] Unknown record type: {type(record).__name__} attrs={[a for a in dir(record) if not a.startswith('_')][:15]}")
+            print(f"[{datetime.now(timezone.utc)}] Unknown record type: {tname} attrs={[a for a in dir(record) if not a.startswith('_')][:15]}")
         return
 
     except Exception as e:
