@@ -125,12 +125,21 @@ def parse_occ_symbol(raw_symbol: str) -> dict | None:
 # Redis publish helper
 # ---------------------------------------------------------------------------
 
+class DbnEncoder(json.JSONEncoder):
+    """JSON encoder that handles Databento enum types (Side, Action, StatType, etc.)."""
+    def default(self, obj):
+        if hasattr(obj, 'value'):
+            return obj.value
+        if hasattr(obj, 'name'):
+            return obj.name
+        return super().default(obj)
+
 def publish(channel: str, payload: dict):
     """Publish a JSON payload to a Redis channel."""
     if redis_client is None:
         return
     try:
-        redis_client.publish(channel, json.dumps(payload))
+        redis_client.publish(channel, json.dumps(payload, cls=DbnEncoder))
     except Exception as e:
         print(f"[{datetime.now(timezone.utc)}] Redis publish error on {channel}: {e}")
 
