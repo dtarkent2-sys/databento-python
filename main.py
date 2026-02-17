@@ -139,7 +139,11 @@ def publish(channel: str, payload: dict):
     if redis_client is None:
         return
     try:
-        redis_client.publish(channel, json.dumps(payload, cls=DbnEncoder))
+        msg = json.dumps(payload, cls=DbnEncoder)
+        redis_client.publish(channel, msg)
+        # Persist definitions in a hash so late-joining subscribers can bootstrap
+        if channel == "dbn:def" and "instrumentId" in payload:
+            redis_client.hset("dbn:instruments", str(payload["instrumentId"]), msg)
     except Exception as e:
         print(f"[{datetime.now(timezone.utc)}] Redis publish error on {channel}: {e}")
 
