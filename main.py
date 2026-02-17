@@ -1,55 +1,40 @@
-# main.py - Simple live OPRA streamer for SPY options (run by Railway)
 import databento as db
 import os
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 
 API_KEY = os.getenv("DATABENTO_API_KEY")
 if not API_KEY:
-    print("ERROR: DATABENTO_API_KEY not set in environment variables")
+    print("ERROR: DATABENTO_API_KEY not set")
     exit(1)
-
-print(f"[{datetime.utcnow()}] Initializing Databento Live client...")
 
 client = db.Live(key=API_KEY)
 
-# Subscribe to SPY options chain
-client.subscribe(
-    dataset="OPRA.PILLAR",
-    schema="definition",              # strikes, expiries, instrument info
-    stype_in="parent",
-    symbols="SPY.OPT",                # all SPY options under parent symbol
-)
+print(f"[{datetime.now(timezone.utc)}] Initializing Databento Live client...")
 
+# Try "OPRA" or "OPRA.PILLAR" – test variations
 client.subscribe(
-    dataset="OPRA.PILLAR",
-    schema="equity-open-interest",    # live open interest updates
+    dataset="OPRA",  # <-- Try this first; if fails, "OPRA.PILLAR"
+    schema="definition",
     stype_in="parent",
     symbols="SPY.OPT",
 )
 
-# Optional: add quotes/NBBO for IV/greeks (uncomment when ready)
-# client.subscribe(
-#     dataset="OPRA.PILLAR",
-#     schema="cmbp-1",
-#     stype_in="parent",
-#     symbols="SPY.OPT",
-# )
+client.subscribe(
+    dataset="OPRA",
+    schema="equity-open-interest",
+    stype_in="parent",
+    symbols="SPY.OPT",
+)
 
 def on_record(record):
-    print(f"[{datetime.utcnow()}] Record received: {record}")
-    # TODO: Parse record → update chain dict → compute GEX/vanna/charm/etc.
-    # Later: publish to Redis or print JSON for Node dashboard
+    print(f"[{datetime.now(timezone.utc)}] Record: {record}")
 
 client.add_callback(on_record)
 
 async def run():
-    print(f"[{datetime.utcnow()}] Starting live subscription to OPRA.PILLAR for SPY...")
-    try:
-        await client.start()
-    except Exception as e:
-        print(f"Stream error: {e}")
-        # Add retry logic here if needed
+    print(f"[{datetime.now(timezone.utc)}] Starting stream...")
+    await client.start()
 
 if __name__ == "__main__":
     asyncio.run(run())
