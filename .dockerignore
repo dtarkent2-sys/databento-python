@@ -1,0 +1,13 @@
+.git
+.github
+__pycache__
+*.pyc
+*.pyo
+tests/
+examples/
+notebooks/
+scripts/
+*.md
+!README.md
+.gitignore
+.gitattributes
