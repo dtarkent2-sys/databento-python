@@ -184,13 +184,12 @@ def enrich(instrument_id: int) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Record callback with debug counters
+# Record callback
 # ---------------------------------------------------------------------------
 
-_record_counts = {"trade": 0, "quote": 0, "definition": 0, "statistic": 0, "other": 0}
-_other_types = {}  # Track type names for "other" records
+_record_counts = {"trade": 0, "quote": 0, "definition": 0, "statistic": 0, "mapping": 0, "other": 0}
 _total_records = 0
-_LOG_INTERVAL = 5000  # Log stats every N records
+_LOG_INTERVAL = 50000  # Log stats every N records
 
 def on_record(record):
     """Handle each incoming Databento record."""
@@ -198,20 +197,41 @@ def on_record(record):
     try:
         _total_records += 1
 
-        # Log record type name for first 20 records (helps identify SDK class names)
-        if _total_records <= 20:
-            print(f"[{datetime.now(timezone.utc)}] Record #{_total_records}: {type(record).__name__} (instrument_id={getattr(record, 'instrument_id', '?')})")
-
-        # Log first SymbolMappingMsg to see its attributes
-        if _total_records <= 25 and type(record).__name__ == 'SymbolMappingMsg':
-            print(f"[{datetime.now(timezone.utc)}] SymbolMappingMsg attrs: {[a for a in dir(record) if not a.startswith('_')]}")
-            print(f"[{datetime.now(timezone.utc)}] SymbolMappingMsg raw_symbol={getattr(record, 'raw_symbol', 'N/A')} stype_in_symbol={getattr(record, 'stype_in_symbol', 'N/A')} stype_out_symbol={getattr(record, 'stype_out_symbol', 'N/A')}")
-
         # Periodic stats
         if _total_records % _LOG_INTERVAL == 0:
-            print(f"[{datetime.now(timezone.utc)}] Stats after {_total_records} records: {_record_counts} | other_types: {_other_types} | instruments cached: {len(instruments)}")
+            print(f"[{datetime.now(timezone.utc)}] Stats after {_total_records} records: {_record_counts} | instruments cached: {len(instruments)}")
 
-        # -- Instrument Definition --
+        # -- SymbolMappingMsg: instrument definitions via parent symbol resolution --
+        # When subscribing with stype_in="parent", Databento delivers instrument
+        # info as SymbolMappingMsg (not InstrumentDefMsg). stype_out_symbol contains
+        # the OCC option symbol which we parse for underlying/strike/expiry/type.
+        if isinstance(record, db.SymbolMappingMsg):
+            _record_counts["mapping"] += 1
+            occ_symbol = getattr(record, "stype_out_symbol", "") or ""
+            parsed = parse_occ_symbol(occ_symbol)
+
+            defn = {
+                "rawSymbol": occ_symbol,
+                "underlying": parsed["underlying"] if parsed else "",
+                "strike": parsed["strike"] if parsed else None,
+                "optionType": parsed["optionType"] if parsed else "",
+                "expirationDate": parsed["expirationDate"] if parsed else "",
+                "multiplier": 100,  # Standard equity option multiplier
+                "minPriceIncrement": None,
+            }
+
+            instruments[record.instrument_id] = defn
+
+            payload = {
+                "type": "definition",
+                "instrumentId": record.instrument_id,
+                **defn,
+                "ts": ts_to_iso(getattr(record, "ts_event", None)),
+            }
+            publish("dbn:def", payload)
+            return
+
+        # -- Instrument Definition (fallback — may arrive during session replay) --
         if isinstance(record, db.InstrumentDefMsg):
             _record_counts["definition"] += 1
             raw_symbol = getattr(record, "raw_symbol", "") or ""
@@ -295,12 +315,8 @@ def on_record(record):
             publish("dbn:quote", payload)
             return
 
-        # -- All other record types (SymbolMappingMsg, SystemMsg, etc.) --
+        # -- SystemMsg, ErrorMsg, etc. — skip --
         _record_counts["other"] += 1
-        tname = type(record).__name__
-        _other_types[tname] = _other_types.get(tname, 0) + 1
-        if _record_counts["other"] <= 5:
-            print(f"[{datetime.now(timezone.utc)}] Unknown record type: {tname} attrs={[a for a in dir(record) if not a.startswith('_')][:15]}")
         return
 
     except Exception as e:
