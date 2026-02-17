@@ -23,14 +23,14 @@ def create_and_subscribe():
     """Create a new Live client and subscribe to feeds."""
     client = db.Live(key=API_KEY)
     client.subscribe(
-        dataset="OPRA",
+        dataset="OPRA.PILLAR",
         schema="definition",
         stype_in="parent",
         symbols="SPY.OPT",
     )
     client.subscribe(
-        dataset="OPRA",
-        schema="equity-open-interest",
+        dataset="OPRA.PILLAR",
+        schema="statistics",
         stype_in="parent",
         symbols="SPY.OPT",
     )
