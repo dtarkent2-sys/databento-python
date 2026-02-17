@@ -11,30 +11,31 @@ if not API_KEY:
 
 PORT = int(os.getenv("PORT", "8080"))
 
-client = db.Live(key=API_KEY)
-
-print(f"[{datetime.now(timezone.utc)}] Initializing Databento Live client...")
-
-client.subscribe(
-    dataset="OPRA",
-    schema="definition",
-    stype_in="parent",
-    symbols="SPY.OPT",
-)
-
-client.subscribe(
-    dataset="OPRA",
-    schema="equity-open-interest",
-    stype_in="parent",
-    symbols="SPY.OPT",
-)
+MAX_RETRIES = 10
+INITIAL_BACKOFF = 2  # seconds
 
 
 def on_record(record):
     print(f"[{datetime.now(timezone.utc)}] Record: {record}")
 
 
-client.add_callback(on_record)
+def create_and_subscribe():
+    """Create a new Live client and subscribe to feeds."""
+    client = db.Live(key=API_KEY)
+    client.subscribe(
+        dataset="OPRA",
+        schema="definition",
+        stype_in="parent",
+        symbols="SPY.OPT",
+    )
+    client.subscribe(
+        dataset="OPRA",
+        schema="equity-open-interest",
+        stype_in="parent",
+        symbols="SPY.OPT",
+    )
+    client.add_callback(on_record)
+    return client
 
 
 async def health_check(request):
@@ -42,7 +43,7 @@ async def health_check(request):
 
 
 async def run():
-    # Start health check server so Railway knows the service is alive
+    # Start health check server first so Railway knows the service is alive
     app = web.Application()
     app.router.add_get("/", health_check)
     app.router.add_get("/health", health_check)
@@ -52,9 +53,23 @@ async def run():
     await site.start()
     print(f"[{datetime.now(timezone.utc)}] Health check server listening on port {PORT}")
 
-    # Start the Databento live stream
-    print(f"[{datetime.now(timezone.utc)}] Starting stream...")
-    await client.start()
+    # Connect to Databento with retry logic
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            print(f"[{datetime.now(timezone.utc)}] Connecting to Databento (attempt {attempt}/{MAX_RETRIES})...")
+            client = create_and_subscribe()
+            print(f"[{datetime.now(timezone.utc)}] Connected. Starting stream...")
+            await client.start()
+            return  # clean exit
+        except db.common.error.BentoError as e:
+            print(f"[{datetime.now(timezone.utc)}] Connection failed: {e}")
+            if attempt < MAX_RETRIES:
+                backoff = INITIAL_BACKOFF * (2 ** (attempt - 1))
+                print(f"[{datetime.now(timezone.utc)}] Retrying in {backoff}s...")
+                await asyncio.sleep(backoff)
+            else:
+                print(f"[{datetime.now(timezone.utc)}] Max retries reached. Exiting.")
+                raise
 
 
 if __name__ == "__main__":
