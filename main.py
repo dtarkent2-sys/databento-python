@@ -202,6 +202,11 @@ def on_record(record):
         if _total_records <= 20:
             print(f"[{datetime.now(timezone.utc)}] Record #{_total_records}: {type(record).__name__} (instrument_id={getattr(record, 'instrument_id', '?')})")
 
+        # Log first SymbolMappingMsg to see its attributes
+        if _total_records <= 25 and type(record).__name__ == 'SymbolMappingMsg':
+            print(f"[{datetime.now(timezone.utc)}] SymbolMappingMsg attrs: {[a for a in dir(record) if not a.startswith('_')]}")
+            print(f"[{datetime.now(timezone.utc)}] SymbolMappingMsg raw_symbol={getattr(record, 'raw_symbol', 'N/A')} stype_in_symbol={getattr(record, 'stype_in_symbol', 'N/A')} stype_out_symbol={getattr(record, 'stype_out_symbol', 'N/A')}")
+
         # Periodic stats
         if _total_records % _LOG_INTERVAL == 0:
             print(f"[{datetime.now(timezone.utc)}] Stats after {_total_records} records: {_record_counts} | other_types: {_other_types} | instruments cached: {len(instruments)}")
