@@ -59,7 +59,8 @@ async def run():
             print(f"[{datetime.now(timezone.utc)}] Connecting to Databento (attempt {attempt}/{MAX_RETRIES})...")
             client = create_and_subscribe()
             print(f"[{datetime.now(timezone.utc)}] Connected. Starting stream...")
-            await client.start()
+            client.start()
+            await client.wait_for_close()
             return  # clean exit
         except db.common.error.BentoError as e:
             print(f"[{datetime.now(timezone.utc)}] Connection failed: {e}")
