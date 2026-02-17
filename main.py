@@ -233,7 +233,7 @@ def on_record(record):
             payload = {
                 "type": "statistic",
                 "instrumentId": record.instrument_id,
-                "statType": getattr(record, "stat_type", None),
+                "statType": int(getattr(record, "stat_type", 0)),
                 "quantity": getattr(record, "quantity", None),
                 "price": to_price(getattr(record, "price", None)),
                 **info,
@@ -253,8 +253,8 @@ def on_record(record):
                 "askPx": to_price(level.ask_px),
                 "bidSz": level.bid_sz,
                 "askSz": level.ask_sz,
-                "bidCt": level.bid_ct,
-                "askCt": level.ask_ct,
+                "bidCt": getattr(level, "bid_ct", 0),
+                "askCt": getattr(level, "ask_ct", 0),
                 **info,
                 "ts": ts_to_iso(getattr(record, "ts_event", None)),
             }
