@@ -313,16 +313,18 @@ def on_record(record):
             publish("dbn:stat", payload)
             return
 
-        # -- Quotes (CBBOMsg / MBP1Msg — anything with .levels) --
+        # -- Quotes (CBBOMsg / MBP1Msg / CMBP1Msg / TBBOMsg — anything with .levels) --
         if hasattr(record, "levels") and record.levels:
             _record_counts["quote"] += 1
             info = enrich(record.instrument_id)
             level = record.levels[0]
+            bid_px = to_price(level.bid_px)
+            ask_px = to_price(level.ask_px)
             payload = {
                 "type": "quote",
                 "instrumentId": record.instrument_id,
-                "bidPx": to_price(level.bid_px),
-                "askPx": to_price(level.ask_px),
+                "bidPx": bid_px,
+                "askPx": ask_px,
                 "bidSz": level.bid_sz,
                 "askSz": level.ask_sz,
                 "bidCt": getattr(level, "bid_ct", 0),
@@ -331,6 +333,27 @@ def on_record(record):
                 "ts": ts_to_iso(getattr(record, "ts_event", None)),
             }
             publish("dbn:quote", payload)
+
+            # TCBBO / CMBP-1 records also carry a trade component
+            # (price > 0 and size > 0 indicates a trade occurred)
+            trade_price = to_price(getattr(record, "price", None))
+            trade_size = getattr(record, "size", 0)
+            if trade_price and trade_price > 0 and trade_size and trade_size > 0:
+                trade_payload = {
+                    "type": "trade",
+                    "instrumentId": record.instrument_id,
+                    "price": trade_price,
+                    "size": trade_size,
+                    "side": getattr(record, "side", ""),
+                    "action": getattr(record, "action", ""),
+                    "flags": getattr(record, "flags", 0),
+                    "bidPx": bid_px,
+                    "askPx": ask_px,
+                    **info,
+                    "multiplier": instruments.get(record.instrument_id, {}).get("multiplier", 100),
+                    "ts": ts_to_iso(getattr(record, "ts_event", None)),
+                }
+                publish("dbn:trade", trade_payload)
             return
 
         # -- OHLCV bars (equity price candles) --
@@ -387,6 +410,18 @@ def create_opra_client():
         client.subscribe(
             dataset="OPRA.PILLAR",
             schema="cbbo-1s",
+            stype_in="parent",
+            symbols=symbol,
+        )
+        client.subscribe(
+            dataset="OPRA.PILLAR",
+            schema="cmbp-1",
+            stype_in="parent",
+            symbols=symbol,
+        )
+        client.subscribe(
+            dataset="OPRA.PILLAR",
+            schema="tcbbo",
             stype_in="parent",
             symbols=symbol,
         )
