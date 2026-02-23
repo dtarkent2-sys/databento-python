@@ -475,11 +475,8 @@ async def run():
                 print(f"[{datetime.now(timezone.utc)}] [{name}] Unexpected error: {e} — reconnecting in 10s...")
                 await asyncio.sleep(10)
 
-    # Run OPRA (options) and DBEQ (equity OHLCV) feeds in parallel
-    await asyncio.gather(
-        run_feed("OPRA", create_opra_client),
-        run_feed("DBEQ", create_equity_client),
-    )
+    # Run OPRA feed only (DBEQ.BASIC requires separate live license we don't have)
+    await run_feed("OPRA", create_opra_client)
 
 
 if __name__ == "__main__":
