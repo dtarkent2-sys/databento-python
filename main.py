@@ -45,6 +45,12 @@ else:
 # ---------------------------------------------------------------------------
 instruments: dict[int, dict] = {}
 
+# Equity instrument mappings (for OHLCV bars): instrument_id -> ticker
+_equity_instruments: dict[int, str] = {}
+
+# Equity symbols to subscribe for OHLCV bars
+EQUITY_SYMBOLS = ["SPY", "QQQ", "IWM"]
+
 # ---------------------------------------------------------------------------
 # Price converter
 # ---------------------------------------------------------------------------
@@ -191,7 +197,7 @@ def enrich(instrument_id: int) -> dict:
 # Record callback
 # ---------------------------------------------------------------------------
 
-_record_counts = {"trade": 0, "quote": 0, "definition": 0, "statistic": 0, "mapping": 0, "other": 0}
+_record_counts = {"trade": 0, "quote": 0, "definition": 0, "statistic": 0, "mapping": 0, "ohlcv": 0, "other": 0}
 _total_records = 0
 _LOG_INTERVAL = 50000  # Log stats every N records
 
@@ -213,6 +219,14 @@ def on_record(record):
             _record_counts["mapping"] += 1
             occ_symbol = getattr(record, "stype_out_symbol", "") or ""
             parsed = parse_occ_symbol(occ_symbol)
+
+            # Equity mapping (no OCC parse) — just track instrument_id -> ticker
+            if not parsed:
+                in_sym = getattr(record, "stype_in_symbol", "") or ""
+                ticker = occ_symbol.strip() or in_sym.strip()
+                if ticker:
+                    _equity_instruments[record.instrument_id] = ticker.upper()
+                return
 
             defn = {
                 "rawSymbol": occ_symbol,
@@ -319,6 +333,34 @@ def on_record(record):
             publish("dbn:quote", payload)
             return
 
+        # -- OHLCV bars (equity price candles) --
+        if isinstance(record, db.OHLCVMsg):
+            _record_counts["ohlcv"] = _record_counts.get("ohlcv", 0) + 1
+            # For equity bars, instrument_id maps to a ticker via instruments cache
+            # but equity symbols won't be in our OPRA instruments cache.
+            # Use stype_in mapping: the raw_symbol on the record or resolve from instrument_id.
+            ticker = ""
+            cached = instruments.get(record.instrument_id)
+            if cached:
+                ticker = cached.get("underlying", "")
+            # Equity OHLCV: map instrument_id to ticker via _equity_instruments
+            if not ticker:
+                ticker = _equity_instruments.get(record.instrument_id, "")
+
+            payload = {
+                "type": "ohlcv",
+                "instrumentId": record.instrument_id,
+                "ticker": ticker,
+                "open": to_price(record.open),
+                "high": to_price(record.high),
+                "low": to_price(record.low),
+                "close": to_price(record.close),
+                "volume": record.volume,
+                "ts": ts_to_iso(getattr(record, "ts_event", None)),
+            }
+            publish("dbn:ohlcv", payload)
+            return
+
         # -- SystemMsg, ErrorMsg, etc. — skip --
         _record_counts["other"] += 1
         return
@@ -370,6 +412,18 @@ def create_and_subscribe():
             start=0,
         )
 
+    # -- Equity OHLCV bars for live price chart --
+    for ticker in EQUITY_SYMBOLS:
+        try:
+            client.subscribe(
+                dataset="DBEQ.BASIC",
+                schema="ohlcv-1s",
+                stype_in="raw_symbol",
+                symbols=ticker,
+            )
+        except Exception as e:
+            print(f"[{datetime.now(timezone.utc)}] DBEQ.BASIC ohlcv-1s subscription failed for {ticker}: {e}")
+
     client.add_callback(on_record)
     return client
 
@@ -397,25 +451,34 @@ async def run():
     await site.start()
     print(f"[{datetime.now(timezone.utc)}] Health check server listening on port {PORT}")
 
-    # Connect to Databento with retry logic
-    for attempt in range(1, MAX_RETRIES + 1):
+    # Persistent reconnect loop — reconnects on mid-session disconnects
+    consecutive_failures = 0
+    while True:
         try:
-            print(f"[{datetime.now(timezone.utc)}] Connecting to Databento (attempt {attempt}/{MAX_RETRIES})...")
+            print(f"[{datetime.now(timezone.utc)}] Connecting to Databento...")
             print(f"[{datetime.now(timezone.utc)}] Subscribing to {SYMBOLS} across trades, cbbo-1s, statistics, definition")
             client = create_and_subscribe()
             print(f"[{datetime.now(timezone.utc)}] Connected. Starting stream...")
             client.start()
+            consecutive_failures = 0  # reset on successful connect
             await client.wait_for_close()
-            return  # clean exit
+            # Session closed (server-side disconnect, session rotation, etc.)
+            print(f"[{datetime.now(timezone.utc)}] Stream closed by server — reconnecting in 5s...")
+            await asyncio.sleep(5)
         except db.common.error.BentoError as e:
-            print(f"[{datetime.now(timezone.utc)}] Connection failed: {e}")
-            if attempt < MAX_RETRIES:
-                backoff = INITIAL_BACKOFF * (2 ** (attempt - 1))
+            consecutive_failures += 1
+            backoff = min(INITIAL_BACKOFF * (2 ** (consecutive_failures - 1)), 120)
+            print(f"[{datetime.now(timezone.utc)}] Connection error (attempt {consecutive_failures}): {e}")
+            if consecutive_failures >= MAX_RETRIES:
+                print(f"[{datetime.now(timezone.utc)}] {MAX_RETRIES} consecutive failures — waiting 5 min before retrying...")
+                await asyncio.sleep(300)
+                consecutive_failures = 0  # reset and keep trying
+            else:
                 print(f"[{datetime.now(timezone.utc)}] Retrying in {backoff}s...")
                 await asyncio.sleep(backoff)
-            else:
-                print(f"[{datetime.now(timezone.utc)}] Max retries reached. Exiting.")
-                raise
+        except Exception as e:
+            print(f"[{datetime.now(timezone.utc)}] Unexpected error: {e} — reconnecting in 10s...")
+            await asyncio.sleep(10)
 
 
 if __name__ == "__main__":
