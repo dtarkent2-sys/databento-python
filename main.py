@@ -373,28 +373,23 @@ def on_record(record):
 # Databento client setup
 # ---------------------------------------------------------------------------
 
-def create_and_subscribe():
-    """Create a new Live client and subscribe to feeds."""
+def create_opra_client():
+    """Create a Live client for OPRA options data."""
     client = db.Live(key=API_KEY)
 
     for symbol in SYMBOLS:
-        # Trades — live only (no start param)
         client.subscribe(
             dataset="OPRA.PILLAR",
             schema="trades",
             stype_in="parent",
             symbols=symbol,
         )
-
-        # CBBO-1s quotes — live only (no start param)
         client.subscribe(
             dataset="OPRA.PILLAR",
             schema="cbbo-1s",
             stype_in="parent",
             symbols=symbol,
         )
-
-        # Statistics — start=0 for session replay (accumulated OI)
         client.subscribe(
             dataset="OPRA.PILLAR",
             schema="statistics",
@@ -402,8 +397,6 @@ def create_and_subscribe():
             symbols=symbol,
             start=0,
         )
-
-        # Definitions — start=0 for session replay (full instrument universe)
         client.subscribe(
             dataset="OPRA.PILLAR",
             schema="definition",
@@ -412,17 +405,21 @@ def create_and_subscribe():
             start=0,
         )
 
-    # -- Equity OHLCV bars for live price chart --
+    client.add_callback(on_record)
+    return client
+
+
+def create_equity_client():
+    """Create a separate Live client for DBEQ equity OHLCV bars."""
+    client = db.Live(key=API_KEY)
+
     for ticker in EQUITY_SYMBOLS:
-        try:
-            client.subscribe(
-                dataset="DBEQ.BASIC",
-                schema="ohlcv-1s",
-                stype_in="raw_symbol",
-                symbols=ticker,
-            )
-        except Exception as e:
-            print(f"[{datetime.now(timezone.utc)}] DBEQ.BASIC ohlcv-1s subscription failed for {ticker}: {e}")
+        client.subscribe(
+            dataset="DBEQ.BASIC",
+            schema="ohlcv-1s",
+            stype_in="raw_symbol",
+            symbols=ticker,
+        )
 
     client.add_callback(on_record)
     return client
@@ -451,34 +448,38 @@ async def run():
     await site.start()
     print(f"[{datetime.now(timezone.utc)}] Health check server listening on port {PORT}")
 
-    # Persistent reconnect loop — reconnects on mid-session disconnects
-    consecutive_failures = 0
-    while True:
-        try:
-            print(f"[{datetime.now(timezone.utc)}] Connecting to Databento...")
-            print(f"[{datetime.now(timezone.utc)}] Subscribing to {SYMBOLS} across trades, cbbo-1s, statistics, definition")
-            client = create_and_subscribe()
-            print(f"[{datetime.now(timezone.utc)}] Connected. Starting stream...")
-            client.start()
-            consecutive_failures = 0  # reset on successful connect
-            await client.wait_for_close()
-            # Session closed (server-side disconnect, session rotation, etc.)
-            print(f"[{datetime.now(timezone.utc)}] Stream closed by server — reconnecting in 5s...")
-            await asyncio.sleep(5)
-        except db.common.error.BentoError as e:
-            consecutive_failures += 1
-            backoff = min(INITIAL_BACKOFF * (2 ** (consecutive_failures - 1)), 120)
-            print(f"[{datetime.now(timezone.utc)}] Connection error (attempt {consecutive_failures}): {e}")
-            if consecutive_failures >= MAX_RETRIES:
-                print(f"[{datetime.now(timezone.utc)}] {MAX_RETRIES} consecutive failures — waiting 5 min before retrying...")
-                await asyncio.sleep(300)
-                consecutive_failures = 0  # reset and keep trying
-            else:
-                print(f"[{datetime.now(timezone.utc)}] Retrying in {backoff}s...")
-                await asyncio.sleep(backoff)
-        except Exception as e:
-            print(f"[{datetime.now(timezone.utc)}] Unexpected error: {e} — reconnecting in 10s...")
-            await asyncio.sleep(10)
+    async def run_feed(name, create_fn):
+        """Persistent reconnect loop for a single Databento feed."""
+        consecutive_failures = 0
+        while True:
+            try:
+                print(f"[{datetime.now(timezone.utc)}] [{name}] Connecting...")
+                client = create_fn()
+                client.start()
+                consecutive_failures = 0
+                print(f"[{datetime.now(timezone.utc)}] [{name}] Connected. Streaming...")
+                await client.wait_for_close()
+                print(f"[{datetime.now(timezone.utc)}] [{name}] Stream closed — reconnecting in 5s...")
+                await asyncio.sleep(5)
+            except db.common.error.BentoError as e:
+                consecutive_failures += 1
+                backoff = min(INITIAL_BACKOFF * (2 ** (consecutive_failures - 1)), 120)
+                print(f"[{datetime.now(timezone.utc)}] [{name}] Error (attempt {consecutive_failures}): {e}")
+                if consecutive_failures >= MAX_RETRIES:
+                    print(f"[{datetime.now(timezone.utc)}] [{name}] {MAX_RETRIES} failures — waiting 5 min...")
+                    await asyncio.sleep(300)
+                    consecutive_failures = 0
+                else:
+                    await asyncio.sleep(backoff)
+            except Exception as e:
+                print(f"[{datetime.now(timezone.utc)}] [{name}] Unexpected error: {e} — reconnecting in 10s...")
+                await asyncio.sleep(10)
+
+    # Run OPRA (options) and DBEQ (equity OHLCV) feeds in parallel
+    await asyncio.gather(
+        run_feed("OPRA", create_opra_client),
+        run_feed("DBEQ", create_equity_client),
+    )
 
 
 if __name__ == "__main__":
