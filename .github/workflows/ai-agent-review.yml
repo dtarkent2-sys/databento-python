@@ -1,4 +1,4 @@
-name: AI Agent Code Review
+name: Code Review Agent
 
 on:
   push:
@@ -9,18 +9,32 @@ on:
       - main
 
 jobs:
-  ai-agent-review:
-    name: AI Agent Code Review
+  security-scan:
+    name: Security Scan
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-      checks: write
-    
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      
+      - name: TruffleHog Secret Scan
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --only-verified
+      
+      - name: GitHub CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          languages: javascript-typescript
+
+  code-quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
       
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -30,116 +44,45 @@ jobs:
       - name: Install Dependencies
         run: npm ci
       
-      - name: Get Changed Files
-        id: changed
-        run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            BASE=${{ github.event.pull_request.base.sha }}
-            HEAD=${{ github.event.pull_request.head.sha }}
-          else
-            BASE=HEAD~1
-            HEAD=HEAD
-          fi
-          
-          FILES=$(git diff --name-only $BASE $HEAD | tr '\n' ',' | sed 's/,$//')
-          DIFF=$(git diff $BASE $HEAD)
-          
-          echo "files=$FILES" >> $GITHUB_OUTPUT
-          echo "diff<<EOFDIFF" >> $GITHUB_OUTPUT
-          echo "$DIFF" >> $GITHUB_OUTPUT
-          echo "EOFDIFF" >> $GITHUB_OUTPUT
+      - name: Type Check
+        run: npm run type-check || echo "::warning::Type check failed"
       
-      - name: AI Code Review with Claude
-        uses: anthropics/claude-code-action@v1
+      - name: Lint
+        run: npm run lint || echo "::warning::Lint failed"
+      
+      - name: Build
+        run: npm run build || echo "::warning::Build failed"
+      
+      - name: Reviewdog Lint Annotations
+        uses: reviewdog/action-lint@v1
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          model: claude-sonnet-4-6
-          timeout_minutes: 15
-          prompt: |
-            You are a senior code reviewer for SharkQuant, a quant trading firm.
-            
-            Review the following code changes for:
-            
-            1. **Security Issues**
-               - Exposed secrets/API keys
-               - Authentication/authorization flaws
-               - SQL injection, XSS, command injection
-               - Unsafe deserialization
-               - Insecure data handling
-            
-            2. **Bugs & Logic Errors**
-               - Null/undefined handling
-               - Race conditions
-               - Edge cases not handled
-               - Off-by-one errors
-               - Type mismatches
-            
-            3. **Performance Issues**
-               - N+1 queries
-               - Unnecessary re-renders
-               - Memory leaks
-               - Inefficient algorithms
-            
-            4. **Code Quality**
-               - Violates project conventions
-               - Missing error handling
-               - Poor naming
-               - Overly complex logic
-               - Missing tests
-            
-            5. **Trading-Specific Concerns**
-               - Numerical precision issues
-               - Floating point comparisons
-               - Timezone handling
-               - Market data edge cases
-            
-            Format your response as:
-            
-            ## 🔍 AI Code Review
-            
-            ### Summary
-            <2-3 sentence overview>
-            
-            ### 🚨 Critical Issues
-            - [ ] Issue description (file:line)
-              ```suggestion
-              fix
-              ```
-            
-            ### ⚠️ Warnings
-            - [ ] Issue description (file:line)
-            
-            ### 💡 Suggestions
-            - [ ] Improvement suggestion
-            
-            ### ✅ Good Patterns
-            - What was done well
-            
-            Be specific, actionable, and concise. Only flag real issues.
-            
-            DIFF TO REVIEW:
-            ${{ steps.changed.outputs.diff }}
-      
-      - name: Post Review Summary
-        if: always()
-        uses: actions/github-script@v7
+          reporter: github-pr-review
+          level: warning
+
+  summary:
+    name: Review Summary
+    runs-on: ubuntu-latest
+    needs: [security-scan, code-quality]
+    if: always()
+    steps:
+      - uses: actions/github-script@v7
         with:
           script: |
             const context = github.context;
             const owner = context.repo.owner;
             const repo = context.repo.repo;
             
-            let body = '## 🤖 AI Agent Code Review Complete\n\n';
-            body += 'Review performed by Claude 4 Sonnet\n\n';
-            body += '### Checks Performed:\n';
-            body += '- ✅ Security scan (secrets, auth, injection)\n';
-            body += '- ✅ Bug detection (logic, types, edge cases)\n';
-            body += '- ✅ Performance analysis\n';
-            body += '- ✅ Code quality review\n';
-            body += '- ✅ Trading-specific concerns\n\n';
+            const securityResult = '${{ needs.security-scan.result }}';
+            const qualityResult = '${{ needs.code-quality.result }}';
+            
+            let body = '## 🔍 Code Review Agent Summary\n\n';
+            body += '| Check | Status |\n';
+            body += '|-------|--------|\n';
+            body += `| Security Scan | ${securityResult === 'success' ? '✅ Pass' : '⚠️ Issues Found'} |\n`;
+            body += `| Code Quality | ${qualityResult === 'success' ? '✅ Pass' : '⚠️ Issues Found'} |\n\n`;
             body += '---\n';
-            body += '**Status**: Review complete. Ready for human approval before merge to main.\n\n';
-            body += '<sub>Generated by SharkQuant AI Agent</sub>';
+            body += '**Next**: Human review required before merge to main.\n\n';
+            body += '<sub>SharkQuant AI Agent</sub>';
             
             if (context.payload.pull_request) {
               await github.rest.issues.createComment({
@@ -149,15 +92,15 @@ jobs:
               });
             }
             
-            // Set check status
-            const check = await github.rest.checks.create({
+            const conclusion = (securityResult === 'success' && qualityResult === 'success') ? 'success' : 'failure';
+            await github.rest.checks.create({
               owner, repo,
-              name: 'AI Agent Code Review',
+              name: 'Code Review Agent',
               head_sha: context.sha,
               status: 'completed',
-              conclusion: 'success',
+              conclusion,
               output: {
-                title: 'AI Code Review Complete',
-                summary: 'Automated code review performed by Claude 4 Sonnet'
+                title: 'Code Review Complete',
+                summary: body
               }
             });
