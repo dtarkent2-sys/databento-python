@@ -85,8 +85,10 @@ def coercible(enum_type: type[M]) -> type[M]:
 
 class StringyMixin:
     """
-    Mixin class for overloading __str__ on Enum types. This will use the
-    Enumerations subclass, if any, to modify the behavior of str().
+    Mixin class for overloading __str__ on Enum types.
+
+    This will use the Enumerations subclass, if any, to modify the
+    behavior of str().
 
     For subclasses of enum.Flag a comma separated string of names is
     returned. For integer enumerations, the lowercase member name is
@@ -134,6 +136,7 @@ class SplitDuration(StringyMixin, str, Enum):
     DAY = "day"
     WEEK = "week"
     MONTH = "month"
+    YEAR = "year"
     NONE = "none"
 
 
@@ -195,6 +198,8 @@ class RecordFlags(StringyMixin, IntFlag):  # type: ignore
     """
     Represents record flags.
 
+    Attributes
+    ----------
     F_LAST
         Marks the last record in a single event for a given `instrument_id`.
     F_TOB
@@ -257,3 +262,14 @@ class JobState(StringyMixin, str, Enum):
     PROCESSING = "processing"
     DONE = "done"
     EXPIRED = "expired"
+
+
+@unique
+class SlowReaderBehavior(StringyMixin, str, Enum):
+    """
+    Live session parameter which controls gateway behavior when the client
+    falls behind real time.
+    """
+
+    SKIP = "skip"
+    WARN = "warn"

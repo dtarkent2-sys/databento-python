@@ -244,8 +244,9 @@ class MemoryDataSource(DataSource):
     @property
     def name(self) -> str:
         """
-        Return the name of the source buffer. Equivalent to `repr` of the
-        input.
+        Return the name of the source buffer.
+
+        Equivalent to `repr` of the input.
 
         Returns
         -------
@@ -269,8 +270,9 @@ class MemoryDataSource(DataSource):
     @property
     def reader(self) -> BytesIO:
         """
-        Return a reader for this buffer. The reader beings at the start of the
-        buffer.
+        Return a reader for this buffer.
+
+        The reader beings at the start of the buffer.
 
         Returns
         -------
@@ -391,8 +393,7 @@ class DBNStore:
         while True:
             raw = reader.read(DBNStore.DBN_READ_SIZE)
             if raw:
-                decoder.write(raw)
-                records = decoder.decode()
+                records = decoder.write_and_decode(raw)
                 for record in records:
                     if isinstance(record, databento_dbn.Metadata):
                         continue
@@ -416,8 +417,9 @@ class DBNStore:
     @property
     def compression(self) -> Compression:
         """
-        Return the data compression format (if any). This is determined by
-        inspecting the data.
+        Return the data compression format (if any).
+
+        This is determined by inspecting the data.
 
         Returns
         -------
@@ -441,8 +443,9 @@ class DBNStore:
     @property
     def end(self) -> pd.Timestamp | None:
         """
-        Return the query end for the data. If None, the end time was not known
-        when the data was generated.
+        Return the query end for the data.
+
+        If None, the end time was not known when the data was generated.
 
         Returns
         -------
@@ -546,11 +549,13 @@ class DBNStore:
     @property
     def schema(self) -> Schema | None:
         """
-        Return the DBN record schema. If None, may contain one or more schemas.
+        Return the DBN record schema.
+
+        If None, may contain one or more schemas.
 
         Returns
         -------
-        Schema or None
+                Schema or None
 
         """
         schema = self._metadata.schema
@@ -577,8 +582,9 @@ class DBNStore:
     @property
     def stype_in(self) -> SType | None:
         """
-        Return the query input symbology type for the data. If None, the
-        records may contain mixed STypes.
+        Return the query input symbology type for the data.
+
+        If None, the records may contain mixed STypes.
 
         Returns
         -------
@@ -1244,6 +1250,9 @@ class DBNStore:
             schema_rtype = RType.from_schema(schema)
             schema_filter = filter(lambda r: r.rtype == schema_rtype, self)
 
+            if self._metadata.ts_out:
+                schema_dtype.append(("ts_out", "u8"))
+
             reader = self.reader
             reader.seek(self._metadata_length)
             ndarray_iter = NDArrayBytesIterator(
@@ -1255,9 +1264,6 @@ class DBNStore:
             # If schema is set, we're handling homogeneous historical data
             schema_struct = self._schema_struct_map[self.schema]
             schema_dtype = schema_struct._dtypes
-
-            if self._metadata.ts_out:
-                schema_dtype.append(("ts_out", "u8"))
 
             if schema is not None and schema != self.schema:
                 # This is to maintain identical behavior with NDArrayBytesIterator

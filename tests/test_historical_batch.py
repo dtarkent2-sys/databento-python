@@ -133,6 +133,43 @@ def test_batch_list_jobs_sends_expected_request(
     assert isinstance(call["auth"], requests.auth.HTTPBasicAuth)
 
 
+@pytest.mark.parametrize(
+    ("short", "expected_params"),
+    [
+        pytest.param(
+            None,
+            [("states", "queued,processing,done"), ("since", None)],
+            id="default",
+        ),
+        pytest.param(
+            True,
+            [("states", "queued,processing,done"), ("since", None), ("short", "True")],
+            id="short",
+        ),
+        pytest.param(
+            False,
+            [("states", "queued,processing,done"), ("since", None), ("short", "False")],
+            id="not_short",
+        ),
+    ],
+)
+def test_batch_list_jobs_short_sends_expected_request(
+    monkeypatch: pytest.MonkeyPatch,
+    historical_client: Historical,
+    short: bool | None,
+    expected_params: list[tuple[str, str]],
+) -> None:
+    # Arrange
+    monkeypatch.setattr(requests, "get", mocked_get := MagicMock())
+
+    # Act
+    historical_client.batch.list_jobs(short=short)
+
+    # Assert
+    call = mocked_get.call_args.kwargs
+    assert call["params"] == expected_params
+
+
 def test_batch_list_files_sends_expected_request(
     monkeypatch: pytest.MonkeyPatch,
     historical_client: Historical,
@@ -147,6 +184,30 @@ def test_batch_list_files_sends_expected_request(
     # Assert
     call = mocked_get.call_args.kwargs
     assert call["url"] == f"{historical_client.gateway}/v{db.API_VERSION}/batch.list_files"
+    assert sorted(call["headers"].keys()) == ["accept", "user-agent"]
+    assert call["headers"]["accept"] == "application/json"
+    assert all(v in call["headers"]["user-agent"] for v in ("Databento/", "Python/"))
+    assert call["params"] == [
+        ("job_id", job_id),
+    ]
+    assert call["timeout"] == (100, 100)
+    assert isinstance(call["auth"], requests.auth.HTTPBasicAuth)
+
+
+def test_batch_get_job_details_sends_expected_request(
+    monkeypatch: pytest.MonkeyPatch,
+    historical_client: Historical,
+) -> None:
+    # Arrange
+    monkeypatch.setattr(requests, "get", mocked_get := MagicMock())
+    job_id = "GLBX-20220610-5DEFXVTMSM"
+
+    # Act
+    historical_client.batch.get_job_details(job_id=job_id)
+
+    # Assert
+    call = mocked_get.call_args.kwargs
+    assert call["url"] == f"{historical_client.gateway}/v{db.API_VERSION}/batch.get_job_details"
     assert sorted(call["headers"].keys()) == ["accept", "user-agent"]
     assert call["headers"]["accept"] == "application/json"
     assert all(v in call["headers"]["user-agent"] for v in ("Databento/", "Python/"))
@@ -450,28 +511,6 @@ def test_batch_download_all_files(
         stub.writestr("testfile.dbn", testfile_data)
 
     job_id = "GLBX-20220610-5DEFXVTMSM"
-    file_content = stub_zip_path.read_bytes()
-    file_hash = f"sha256:{hashlib.sha256(file_content).hexdigest()}"
-    file_size = len(file_content)
-
-    # Mock the call to list files so it returns a test manifest
-    monkeypatch.setattr(
-        historical_client.batch,
-        "list_files",
-        mocked_batch_list_files := MagicMock(
-            return_value=[
-                {
-                    "filename": "testfile.dbn",
-                    "hash": file_hash,
-                    "size": file_size,
-                    "urls": {
-                        "https": f"localhost:442/v0/batch/download/TESTUSER/{job_id}/testfile.dbn",
-                        "ftp": "",
-                    },
-                },
-            ],
-        ),
-    )
 
     # Mock the call for get, so we can simulate a ZIP response
     zip_response = MagicMock()
@@ -497,13 +536,12 @@ def test_batch_download_all_files(
     )
 
     # Assert
-    assert mocked_batch_list_files.call_args.args == (job_id,)
-
     call = mocked_get.call_args.kwargs
     assert call["allow_redirects"]
     assert call["headers"]["accept"] == "application/json"
     assert call["stream"]
-    assert call["url"] == f"localhost:442/v0/batch/download/TESTUSER/{job_id}/{job_id}.zip"
+    assert call["url"] == "https://localhost/v0/batch.download"
+    assert call["params"] == {"job_id": job_id}
 
     if keep_zip:
         assert (tmp_path / job_id / f"{job_id}.zip").exists()
@@ -539,28 +577,6 @@ async def test_batch_download_all_files_async(
         stub.writestr("testfile.dbn", testfile_data)
 
     job_id = "GLBX-20220610-5DEFXVTMSM"
-    file_content = stub_zip_path.read_bytes()
-    file_hash = f"sha256:{hashlib.sha256(file_content).hexdigest()}"
-    file_size = len(file_content)
-
-    # Mock the call to list files so it returns a test manifest
-    monkeypatch.setattr(
-        historical_client.batch,
-        "list_files",
-        mocked_batch_list_files := MagicMock(
-            return_value=[
-                {
-                    "filename": "testfile.dbn",
-                    "hash": file_hash,
-                    "size": file_size,
-                    "urls": {
-                        "https": f"localhost:442/v0/batch/download/TESTUSER/{job_id}/testfile.dbn",
-                        "ftp": "",
-                    },
-                },
-            ],
-        ),
-    )
 
     # Mock the call for get, so we can simulate a ZIP response
     zip_response = MagicMock()
@@ -586,13 +602,12 @@ async def test_batch_download_all_files_async(
     )
 
     # Assert
-    assert mocked_batch_list_files.call_args.args == (job_id,)
-
     call = mocked_get.call_args.kwargs
     assert call["allow_redirects"]
     assert call["headers"]["accept"] == "application/json"
     assert call["stream"]
-    assert call["url"] == f"localhost:442/v0/batch/download/TESTUSER/{job_id}/{job_id}.zip"
+    assert call["url"] == "https://localhost/v0/batch.download"
+    assert call["params"] == {"job_id": job_id}
 
     if keep_zip:
         assert (tmp_path / job_id / f"{job_id}.zip").exists()

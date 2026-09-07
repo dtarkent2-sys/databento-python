@@ -6,7 +6,6 @@ import itertools
 import logging
 import math
 import queue
-import struct
 import threading
 from collections.abc import Iterable
 from functools import partial
@@ -14,12 +13,14 @@ from typing import Final
 
 import databento_dbn
 import pandas as pd
+from databento_dbn import Compression
 from databento_dbn import DBNRecord
 from databento_dbn import Schema
 from databento_dbn import SType
 
 from databento.common.constants import ALL_SYMBOLS
 from databento.common.enums import ReconnectPolicy
+from databento.common.enums import SlowReaderBehavior
 from databento.common.error import BentoError
 from databento.common.publishers import Dataset
 from databento.common.types import ClientRecordCallback
@@ -35,6 +36,9 @@ logger = logging.getLogger(__name__)
 AUTH_TIMEOUT_SECONDS: Final = 30.0
 CONNECT_TIMEOUT_SECONDS: Final = 10.0
 DBN_QUEUE_CAPACITY: Final = 2**20
+DBN_QUEUE_LAG_THRESHOLD: Final = 128
+DBN_QUEUE_MAX_LAG_NS: Final = 1_000_000_000
+DBN_QUEUE_FULL_WARNING_INTERVAL_S: Final = 60.0
 DEFAULT_REMOTE_PORT: Final = 13000
 CLIENT_TIMEOUT_MARGIN_SECONDS: Final = 10
 
@@ -47,6 +51,8 @@ class DBNQueue(queue.SimpleQueue):  # type: ignore [type-arg]
     def __init__(self) -> None:
         super().__init__()
         self._enabled = threading.Event()
+        self._front_ts_index: int | None = None
+        self._back_ts_index: int | None = None
 
     def is_enabled(self) -> bool:
         """
@@ -61,7 +67,16 @@ class DBNQueue(queue.SimpleQueue):  # type: ignore [type-arg]
         """
         Return True when the queue has reached capacity; False otherwise.
         """
-        return self.qsize() > DBN_QUEUE_CAPACITY
+        if self.qsize() > DBN_QUEUE_CAPACITY:
+            return True
+        if (
+            self.qsize() > DBN_QUEUE_LAG_THRESHOLD
+            and self._front_ts_index is not None
+            and self._back_ts_index is not None
+            and self._back_ts_index - self._front_ts_index > DBN_QUEUE_MAX_LAG_NS
+        ):
+            return True
+        return False
 
     def enable(self) -> None:
         """
@@ -105,6 +120,9 @@ class DBNQueue(queue.SimpleQueue):  # type: ignore [type-arg]
 
         """
         if self._enabled.wait(timeout):
+            if self._front_ts_index is None:
+                self._front_ts_index = item.ts_index
+            self._back_ts_index = item.ts_index
             return super().put(item, block, timeout)
         if timeout is not None:
             raise BentoError(f"queue is not enabled after {timeout} second(s)")
@@ -130,8 +148,33 @@ class DBNQueue(queue.SimpleQueue):  # type: ignore [type-arg]
 
         """
         if self.is_enabled():
+            if self._front_ts_index is None:
+                self._front_ts_index = item.ts_index
+            self._back_ts_index = item.ts_index
             return super().put_nowait(item)
         raise BentoError("queue is not enabled")
+
+    def get(
+        self,
+        block: bool = True,
+        timeout: float | None = None,
+    ) -> DBNRecord:
+        record = super().get(block, timeout)
+        if self.empty():
+            self._front_ts_index = None
+            self._back_ts_index = None
+        else:
+            self._front_ts_index = record.ts_index
+        return record
+
+    def get_nowait(self) -> DBNRecord:
+        record = super().get_nowait()
+        if self.empty():
+            self._front_ts_index = None
+            self._back_ts_index = None
+        else:
+            self._front_ts_index = record.ts_index
+        return record
 
 
 @dataclasses.dataclass
@@ -159,8 +202,9 @@ class SessionMetadata:
 
     def check(self, other: databento_dbn.Metadata) -> None:
         """
-        Verify the Metadata is compatible with another Metadata message. This
-        is used to ensure DBN streams are compatible with one another.
+        Verify the Metadata is compatible with another Metadata message.
+
+        This is used to ensure DBN streams are compatible with one another.
 
         Parameters
         ----------
@@ -205,8 +249,17 @@ class _SessionProtocol(DatabentoLiveProtocol):
         metadata: SessionMetadata,
         ts_out: bool = False,
         heartbeat_interval_s: int | None = None,
+        slow_reader_behavior: SlowReaderBehavior | str | None = None,
+        compression: Compression = Compression.NONE,
     ):
-        super().__init__(api_key, dataset, ts_out, heartbeat_interval_s)
+        super().__init__(
+            api_key,
+            dataset,
+            ts_out,
+            heartbeat_interval_s,
+            slow_reader_behavior,
+            compression,
+        )
 
         self._dbn_queue = dbn_queue
         self._loop = loop
@@ -215,6 +268,7 @@ class _SessionProtocol(DatabentoLiveProtocol):
         self._user_streams = user_streams
         self._last_ts_event: int | None = None
         self._last_msg_loop_time: float = math.inf
+        self._last_queue_full_warning_t: float = -math.inf
 
     def received_metadata(self, metadata: databento_dbn.Metadata) -> None:
         if self._metadata:
@@ -256,16 +310,14 @@ class _SessionProtocol(DatabentoLiveProtocol):
 
     def _dispatch_writes(self, record: DBNRecord) -> None:
         record_bytes = bytes(record)
-        ts_out_bytes = struct.pack("Q", record.ts_out) if self._metadata.has_ts_out else b""
         for stream in self._user_streams:
             try:
                 stream.write(record_bytes)
-                stream.write(ts_out_bytes)
             except Exception as exc:
                 logger.error(
                     "error writing %s record (%d bytes) to `%s` stream",
                     type(record).__name__,
-                    len(record_bytes) + len(ts_out_bytes),
+                    len(record_bytes),
                     stream.stream_name,
                     exc_info=exc,
                 )
@@ -274,10 +326,13 @@ class _SessionProtocol(DatabentoLiveProtocol):
         self._dbn_queue.put(record)
         # DBNQueue has no max size; so check if it's above capacity, and if so, pause reading
         if self._dbn_queue.is_full():
-            logger.warning(
-                "record queue is full; %d record(s) to be processed",
-                self._dbn_queue.qsize(),
-            )
+            now = self._loop.time()
+            if now - self._last_queue_full_warning_t >= DBN_QUEUE_FULL_WARNING_INTERVAL_S:
+                logger.warning(
+                    "record queue is full; %d record(s) to be processed",
+                    self._dbn_queue.qsize(),
+                )
+                self._last_queue_full_warning_t = now
             self.transport.pause_reading()
 
 
@@ -302,6 +357,8 @@ class LiveSession:
         The reconnect policy for the live session.
             - "none": the client will not reconnect (default)
             - "reconnect": the client will reconnect automatically
+    compression : Compression, optional
+        The compression format for the session. Defaults to no compression.
     """
 
     def __init__(
@@ -313,6 +370,8 @@ class LiveSession:
         user_gateway: str | None = None,
         user_port: int = DEFAULT_REMOTE_PORT,
         reconnect_policy: ReconnectPolicy | str = ReconnectPolicy.NONE,
+        slow_reader_behavior: SlowReaderBehavior | str | None = None,
+        compression: Compression = Compression.NONE,
     ) -> None:
         self._dbn_queue = DBNQueue()
         self._lock = threading.RLock()
@@ -329,6 +388,8 @@ class LiveSession:
         self._api_key = api_key
         self._ts_out = ts_out
         self._heartbeat_interval_s = heartbeat_interval_s or 30
+        self._slow_reader_behavior = slow_reader_behavior
+        self._compression = compression
 
         self._protocol: _SessionProtocol | None = None
         self._transport: asyncio.Transport | None = None
@@ -456,9 +517,9 @@ class LiveSession:
         with self._lock:
             if self._protocol is None:
                 raise ValueError("session is not connected")
-            self._protocol.start()
+            self._loop.call_soon_threadsafe(self._protocol.start)
             self._heartbeat_monitor_task = self._loop.create_task(
-                self._heartbeat_monitor(),
+                self._heartbeat_monitor(self._protocol),
             )
 
     def subscribe(
@@ -471,8 +532,9 @@ class LiveSession:
         snapshot: bool = False,
     ) -> int:
         """
-        Send a subscription request on the current connection. This will create
-        a new connection if there is no active connection to the gateway.
+        Send a subscription request on the current connection.
+
+        This will create a new connection if there is no active connection to the gateway.
 
         Parameters
         ----------
@@ -523,7 +585,7 @@ class LiveSession:
         with self._lock:
             if self._transport is None:
                 return
-            self._transport.abort()
+            self._loop.call_soon_threadsafe(self._transport.abort)
             self._cleanup()
 
     async def wait_for_close(self) -> None:
@@ -579,6 +641,8 @@ class LiveSession:
             metadata=self._metadata,
             ts_out=self.ts_out,
             heartbeat_interval_s=self.heartbeat_interval_s,
+            slow_reader_behavior=self._slow_reader_behavior,
+            compression=self._compression,
         )
 
     def _connect(
@@ -655,20 +719,22 @@ class LiveSession:
 
         return transport, protocol
 
-    async def _heartbeat_monitor(self) -> None:
-        while not self._protocol.disconnected.done():
+    async def _heartbeat_monitor(self, protocol: _SessionProtocol) -> None:
+        while not protocol.disconnected.done():
             await asyncio.sleep(1)
-            gap = self._loop.time() - self._protocol._last_msg_loop_time
+            gap = self._loop.time() - protocol._last_msg_loop_time
             if gap > (self._heartbeat_interval_s + CLIENT_TIMEOUT_MARGIN_SECONDS):
                 logger.error(
                     "disconnecting client due to timeout, no data received for %d second(s)",
                     int(gap),
                 )
-                self._protocol.disconnected.set_exception(
-                    BentoError(
-                        f"Gateway timeout: {gap:.0f} second(s) since last message",
-                    ),
-                )
+                if not protocol.disconnected.done():
+                    protocol.disconnected.set_exception(
+                        BentoError(
+                            f"Gateway timeout: {gap:.0f} second(s) since last message",
+                        ),
+                    )
+                return
 
     async def _reconnect(self) -> None:
         while True:
@@ -706,6 +772,11 @@ class LiveSession:
                         )
 
                     if should_restart:
+                        if self._heartbeat_monitor_task is not None:
+                            self._heartbeat_monitor_task.cancel()
+                        self._heartbeat_monitor_task = self._loop.create_task(
+                            self._heartbeat_monitor(self._protocol),
+                        )
                         self._protocol.start()
                         metadata = await self._protocol._metadata_received
                         gap_end = pd.Timestamp(metadata.start, tz="UTC")

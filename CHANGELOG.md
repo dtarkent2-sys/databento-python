@@ -1,5 +1,202 @@
 # Changelog
 
+## 0.86.0 - 2026-09-01
+
+#### Enhancements
+- Added `UNSUBSCRIBE_ACK` to the `SystemCode` enum for acknowledging unsubscribe requests
+- Upgraded `databento-dbn` to 0.69.0
+  - Fixed incorrect count in DBN metadata causing decoding to read into the start of
+    records
+
+#### Bug fixes
+- Fixed an issue where `InstrumentMap.clear()` didn't clear the LRU cache for `InstrumentMap.resolve()` (credit: @Tomperez98)
+
+## 0.85.0 - 2026-08-25
+
+#### Enhancements
+- Added support for the `short` parameter of `batch.list_jobs`. When set
+  to `True`, the response will contain only the `id`, `state`, and
+  `ts_received` fields for each job
+- Upgraded `databento-dbn` to 0.68.0
+
+## 0.84.0 - 2026-08-18
+
+#### Enhancements
+- Added support for `listing_id`, `issuer_id`, and `security_id` as `stype_in`
+  values for the security master and corporate actions reference data
+  endpoints, and `security_id` for the adjustment factors endpoint
+- Added a `dataset` parameter to `MetadataHttpAPI.list_fields()`. If not
+  provided, the returned fields are for the latest DBN encoding version,
+  which may not match a specific dataset's schema
+- Upgraded `databento-dbn` to 0.67.0:
+  - Improved performance of record field accessors that convert a raw value to an enum, such
+    as `side()`, `action()` and `rtype()`, by no longer copying the description when
+    constructing the conversion error
+
+## 0.83.0 - 2026-08-04
+
+#### Enhancements
+- Added `CorporateActionsHttpAPI.list_events()` and `list_enums()` for fetching
+  documentation on supported corporate action event types and enum values
+- Added `REPLAY_DATA_AGED_OUT` variant to `ErrorCode` enum
+- Added new publisher values for JPX
+- Added an `allocate_isins` parameter to `AdjustmentFactorsHttpAPI.get_range()`,
+  `CorporateActionsHttpAPI.get_range()`, `SecurityMasterHttpAPI.get_range()`,
+  and `SecurityMasterHttpAPI.get_last()` to control whether new ISINs are
+  allocated for plans that are ISIN-limited
+- Upgraded `databento-dbn` to 0.65.0:
+  - Added `finish()` method to the Python Transcoder and a context manager
+    to call this method on exit. This will ensure compressed output contains the
+    end-of-frame block
+
+#### Bug fixes
+- Fixed an issue where the `Live` client's monitor task would not get recreated
+for the new session after a reconnection
+
+## 0.82.0 - 2026-07-21
+
+#### Enhancements
+- Added a `loop` parameter to the `Live` client to provide user level control
+  of which event loop the client's connection uses
+- The `Live` class will no longer create a background thread and event loop
+  upon import
+- Upgraded `databento-dbn` to 0.63.0:
+  - Added an integer representation for `VersionUpgradePolicy`: the enum is now
+    has a value property, a from_int, and comparison against integers
+
+## 0.81.0 - 2026-07-07
+
+#### Enhancements
+- Upgraded `databento-dbn` to 0.62.0:
+  - Added `StatType` variants `MwcbLevel1`, `MwcbLevel2`, and `MwcbLevel3`
+  - Added `StatType` variants `AuctionCollarReferencePrice`, `AuctionCollarUpperPrice`,
+    and `AuctionCollarLowerPrice`
+  - Changed the default `size` field to 0 in `MboMsg`, `TradeMsg`, `Mbp1Msg`, `Mbp10Msg`,
+    `BboMsg`, `Cmbp1Msg`, and `CbboMsg`
+
+## 0.80.0 - 2026-06-16
+
+#### Enhancements
+- Upgraded `databento-dbn` to 0.61.0:
+  - Added `MatchAlgorithm` variant `Allocation`
+- Added new publisher values for Cboe Titanium Cboe Global Indices Feed
+
+#### Bug fixes
+- Fixed an issue where the `Live` client would throw a `TypeError` when connecting
+  using `uvloop`
+
+#### Breaking changes
+- Renamed the following Venue, Dataset, and Publisher:
+    - `CGIF` to `MAIN`
+    - `CGIF.TITANIUM` to `MAIN.CGIF`
+    - `CGIF.TITANIUM.CGIF` to `MAIN.CGIF.MAIN`
+
+## 0.79.0 - 2026-06-02
+
+#### Enhancements
+- Added new venues, datasets, and publishers for US Equities Securities Information Processors
+- Changed the `batch.download` method to use the API's `batch.download` endpoint for
+  downloading a batch job as a ZIP archive
+- Added method for `batch.get_job_details` to access the full details of a batch job
+- Upgraded `databento-dbn` to 0.59.0:
+  - Improvements to `ts_out` decoding and serialization
+
+#### Bug fixes
+- Fixed some thread-unsafe behavior in `Live.start()` and `Live.terminate()` which would
+  call methods from the client's event loop in the main thread
+
+## 0.78.0 - 2026-05-12
+
+#### Enhancements
+- Added time-based backpressure to the live client: pauses reading records from the live
+  gateway when the internal queue spans more than 1 second of data by `ts_index`
+  (`ts_recv` when present, otherwise `ts_event`)
+- Upgraded `databento-dbn` to 0.58.0:
+  - Added flat per-level properties (`bid_px_00`, `pretty_ask_px_03`, etc.) to the
+    Python `MBP1Msg`, `MBP10Msg`, `BBOMsg`, `CMBP1Msg`, and `CBBOMsg` record classes
+    for parity with the DataFrame layout
+  - Added `INDEX` `InstrumentClass` variant
+  - Added `StatType` variants `INDICATIVE_CLOSE_PRICE` and `VENUE_SPECIFIC_PRICE_1`
+
+
+## 0.77.0 - 2026-04-28
+
+#### Enhancements
+- Added new publisher values for Cboe Titanium Cboe Global Indices Feed
+- Added `YEAR` to `SplitDuration` enum to support yearly historical batch job submission
+- Upgraded `databento-dbn` to 0.56.0:
+  - Improved Python `DBNDecoder.decode()` performance with pre-allocated output buffers
+  - Added `DBNDecoder.write_and_decode()` to combine write and decode in a single call
+
+## 0.76.0 - 2026-04-21
+
+#### Enhancements
+- Added new publisher values for OPRA MEMX MX2 Options and IEX Options
+- Upgraded `databento-dbn` to 0.55.0:
+  - Performance improvements to `DBNDecoder`
+
+## 0.75.0 - 2026-04-07
+
+#### Enhancements
+- Upgraded `databento-dbn` to 0.53.0:
+  - Made `ts_out` a permanent field on all Python record types, replacing the
+    dynamic `__dict__` attribute. `ts_out` returns an `int` (`UNDEF_TIMESTAMP` when
+    not set)
+  - Removed `__dict__` from all Python record classes, eliminating a separate
+    per-instance allocation
+
+## 0.74.1 - 2026-03-31
+
+#### Enhancements
+- Upgraded `databento-dbn` to 0.52.1:
+  - Added `__index__` to all int-representable and char-backed Python enums, enabling
+    use with `int()`, `hex()`, and as sequence indices
+  - Fixed memory leak in Python bindings where every record object leaked ~64 bytes
+    due to a `pyo3` 0.28 regression in `#[pyclass(dict)]` deallocation. Downgraded
+    `pyo3` to 0.27.2
+  - Removed unnecessary `dict` from `BidAskPair` and `ConsolidatedBidAskPair` Python
+    classes
+  - Fixed Python type stubs to reflect that `record_size()` is a method, not a property
+  - Fixed Python type stubs for record fields to indicate which fields are writable
+    (e.g. `publisher_id`, `instrument_id`, `price`, `size`) and added `@setter` stubs
+    for enum fields (e.g. `action`, `side`)
+
+## 0.74.0 - 2026-03-24
+
+#### Enhancements
+- Changed `SlowReaderBehavior.SKIP` to send "skip" instead of "drop" to the gateway
+- Upgraded `databento-dbn` to 0.52.0:
+  - Added `SYMBOL_CSTR_LEN` constant and versioned variants (`SYMBOL_CSTR_LEN_V1`,
+    `SYMBOL_CSTR_LEN_V2`, `SYMBOL_CSTR_LEN_V3`) to Python, including in each versioned
+    module (`v1`, `v2`, `v3`) as `SYMBOL_CSTR_LEN`
+  - Added `v1`, `v2`, and `v3` submodule imports to `databento_dbn.__init__` so they are
+    accessible as attributes (e.g. `databento_dbn.v1`)
+
+## 0.73.0 - 2026-03-10
+
+#### Enhancements
+- Upgraded `databento-dbn` to 0.51.0:
+  - Added logic to set `code` when upgrading version 1 `ErrorMsg` to newer versions
+
+## 0.72.0 - 2026-02-26
+
+#### Enhancements
+- Upgraded `databento-dbn` to 0.50.0:
+  - Added `SkippedRecordsAfterSlowReading` to the `ErrorCode` enum for gateway errors originating
+    from slow client catch-up.
+
+## 0.71.0 - 2026-02-17
+
+#### Enhancements
+- Added `slow_reader_behavior` field to `AuthenticationRequest` message
+- Added `SlowReaderBehavior` enum
+- Added support for using compression in the live API:
+  - Added `compression` parameter to the `Live` client constructor
+  - Added `compression` property to the `Live` client
+  - Added `compression` field to `AuthenticationRequest`
+- Upgraded `databento-dbn` to 0.49.0:
+  - Added support for decompressing Zstd in the Python `DBNDecoder` and new optional `compression` parameter
+
 ## 0.70.0 - 2026-01-27
 
 #### Enhancements

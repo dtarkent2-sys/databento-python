@@ -81,7 +81,7 @@ class Venue(StringyMixin, str, Enum):
     XNDQ
         Nasdaq Options.
     XBXO
-        Nasdaq BX Options.
+        Nasdaq Texas Options.
     C2OX
         Cboe C2 Options.
     XPHL
@@ -122,6 +122,42 @@ class Venue(StringyMixin, str, Enum):
         Cboe Futures Exchange.
     OCEA
         Blue Ocean ATS.
+    MXTO
+        MX2 Options.
+    IEXO
+        IEX Options LLC.
+    MAIN
+        Cboe Global Indices Feed.
+    TXSE
+        Texas Stock Exchange, LLC.
+    _24EQ
+        24X National Exchange, LLC.
+    CTA
+        Consolidated Tape Association.
+    UTP
+        Unlisted Trading Privileges.
+    XADF
+        FINRA Alternative Display Facility.
+    MSCI
+        CGIF Morgan Stanley Capital International.
+    FTSE
+        CGIF FTSE Russell.
+    INAV
+        CGIF Intraday Net Asset Values.
+    MSTAR
+        CGIF Morning Star.
+    CCCY
+        CGIF Crypto Currency.
+    CGI
+        CGIF CBOE Global Indices.
+    DEF
+        CGIF Definitions.
+    XTKS
+        Tokyo Stock Exchange.
+    XTKT
+        Tokyo Commodity Exchange.
+    XOSE
+        Osaka Exchange.
 
     """
 
@@ -178,6 +214,24 @@ class Venue(StringyMixin, str, Enum):
     XEEE = "XEEE"
     XCBF = "XCBF"
     OCEA = "OCEA"
+    MXTO = "MXTO"
+    IEXO = "IEXO"
+    MAIN = "MAIN"
+    TXSE = "TXSE"
+    _24EQ = "24EQ"
+    CTA = "CTA"
+    UTP = "UTP"
+    XADF = "XADF"
+    MSCI = "MSCI"
+    FTSE = "FTSE"
+    INAV = "INAV"
+    MSTAR = "MSTAR"
+    CCCY = "CCCY"
+    CGI = "CGI"
+    DEF = "DEF"
+    XTKS = "XTKS"
+    XTKT = "XTKT"
+    XOSE = "XOSE"
 
     @classmethod
     def from_int(cls, value: int) -> Venue:
@@ -290,6 +344,42 @@ class Venue(StringyMixin, str, Enum):
             return Venue.XCBF
         if value == 53:
             return Venue.OCEA
+        if value == 54:
+            return Venue.MXTO
+        if value == 55:
+            return Venue.IEXO
+        if value == 56:
+            return Venue.MAIN
+        if value == 57:
+            return Venue.TXSE
+        if value == 58:
+            return Venue._24EQ
+        if value == 59:
+            return Venue.CTA
+        if value == 60:
+            return Venue.UTP
+        if value == 61:
+            return Venue.XADF
+        if value == 62:
+            return Venue.MSCI
+        if value == 63:
+            return Venue.FTSE
+        if value == 64:
+            return Venue.INAV
+        if value == 65:
+            return Venue.MSTAR
+        if value == 66:
+            return Venue.CCCY
+        if value == 67:
+            return Venue.CGI
+        if value == 68:
+            return Venue.DEF
+        if value == 69:
+            return Venue.XTKS
+        if value == 70:
+            return Venue.XTKT
+        if value == 71:
+            return Venue.XOSE
         raise ValueError(f"Integer value {value} does not correspond with any Venue variant")
 
     def to_int(self) -> int:
@@ -402,6 +492,42 @@ class Venue(StringyMixin, str, Enum):
             return 52
         if self == Venue.OCEA:
             return 53
+        if self == Venue.MXTO:
+            return 54
+        if self == Venue.IEXO:
+            return 55
+        if self == Venue.MAIN:
+            return 56
+        if self == Venue.TXSE:
+            return 57
+        if self == Venue._24EQ:
+            return 58
+        if self == Venue.CTA:
+            return 59
+        if self == Venue.UTP:
+            return 60
+        if self == Venue.XADF:
+            return 61
+        if self == Venue.MSCI:
+            return 62
+        if self == Venue.FTSE:
+            return 63
+        if self == Venue.INAV:
+            return 64
+        if self == Venue.MSTAR:
+            return 65
+        if self == Venue.CCCY:
+            return 66
+        if self == Venue.CGI:
+            return 67
+        if self == Venue.DEF:
+            return 68
+        if self == Venue.XTKS:
+            return 69
+        if self == Venue.XTKT:
+            return 70
+        if self == Venue.XOSE:
+            return 71
         raise ValueError("Invalid Venue")
 
     @property
@@ -474,7 +600,7 @@ class Venue(StringyMixin, str, Enum):
         if self == Venue.XNDQ:
             return "Nasdaq Options"
         if self == Venue.XBXO:
-            return "Nasdaq BX Options"
+            return "Nasdaq Texas Options"
         if self == Venue.C2OX:
             return "Cboe C2 Options"
         if self == Venue.XPHL:
@@ -515,6 +641,42 @@ class Venue(StringyMixin, str, Enum):
             return "Cboe Futures Exchange"
         if self == Venue.OCEA:
             return "Blue Ocean ATS"
+        if self == Venue.MXTO:
+            return "MX2 Options"
+        if self == Venue.IEXO:
+            return "IEX Options LLC"
+        if self == Venue.MAIN:
+            return "Cboe Global Indices Feed"
+        if self == Venue.TXSE:
+            return "Texas Stock Exchange, LLC"
+        if self == Venue._24EQ:
+            return "24X National Exchange, LLC"
+        if self == Venue.CTA:
+            return "Consolidated Tape Association"
+        if self == Venue.UTP:
+            return "Unlisted Trading Privileges"
+        if self == Venue.XADF:
+            return "FINRA Alternative Display Facility"
+        if self == Venue.MSCI:
+            return "CGIF Morgan Stanley Capital International"
+        if self == Venue.FTSE:
+            return "CGIF FTSE Russell"
+        if self == Venue.INAV:
+            return "CGIF Intraday Net Asset Values"
+        if self == Venue.MSTAR:
+            return "CGIF Morning Star"
+        if self == Venue.CCCY:
+            return "CGIF Crypto Currency"
+        if self == Venue.CGI:
+            return "CGIF CBOE Global Indices"
+        if self == Venue.DEF:
+            return "CGIF Definitions"
+        if self == Venue.XTKS:
+            return "Tokyo Stock Exchange"
+        if self == Venue.XTKT:
+            return "Tokyo Commodity Exchange"
+        if self == Venue.XOSE:
+            return "Osaka Exchange"
         raise ValueError("Unexpected Venue value")
 
 
@@ -529,7 +691,7 @@ class Dataset(StringyMixin, str, Enum):
     XNAS_ITCH
         Nasdaq TotalView-ITCH.
     XBOS_ITCH
-        Nasdaq BX TotalView-ITCH.
+        Nasdaq Texas TotalView-ITCH.
     XPSX_ITCH
         Nasdaq PSX TotalView-ITCH.
     BATS_PITCH
@@ -553,7 +715,7 @@ class Dataset(StringyMixin, str, Enum):
     XCIS_TRADES
         NYSE National Trades.
     MEMX_MEMOIR
-        MEMX Memoir Depth.
+        MEMX MEMOIR Depth.
     EPRL_DOM
         MIAX Pearl Depth.
     FINN_NLS
@@ -603,9 +765,31 @@ class Dataset(StringyMixin, str, Enum):
     XEEE_EOBI
         European Energy Exchange EOBI.
     XCBF_PITCH
-        Cboe Futures Exchange PITCH.
+        CFE Depth.
     OCEA_MEMOIR
         Blue Ocean ATS MEMOIR Depth.
+    MAIN_CGIF
+        Cboe Titanium Cboe Global Indices Feed.
+    EQUS_SIP
+        US Equities Security Information Processor.
+    MSCI_CGIF
+        CGIF - Morgan Stanley Capital International.
+    FTSE_CGIF
+        CGIF - FTSE Russell.
+    INAV_CGIF
+        CGIF - Intraday Net Asset Values.
+    MSTAR_CGIF
+        CGIF - Morning Star.
+    CCCY_CGIF
+        CGIF - Crypto Currency.
+    CGI_CGIF
+        CGIF - CBOE Global Indices.
+    XTKS_FLEX
+        Arrowhead FLEX.
+    XTKT_ITCH
+        JPX JGATE3.0-ITCH.
+    XOSE_ITCH
+        JPX JGATE3.0-ITCH.
 
     """
 
@@ -650,6 +834,17 @@ class Dataset(StringyMixin, str, Enum):
     XEEE_EOBI = "XEEE.EOBI"
     XCBF_PITCH = "XCBF.PITCH"
     OCEA_MEMOIR = "OCEA.MEMOIR"
+    MAIN_CGIF = "MAIN.CGIF"
+    EQUS_SIP = "EQUS.SIP"
+    MSCI_CGIF = "MSCI.CGIF"
+    FTSE_CGIF = "FTSE.CGIF"
+    INAV_CGIF = "INAV.CGIF"
+    MSTAR_CGIF = "MSTAR.CGIF"
+    CCCY_CGIF = "CCCY.CGIF"
+    CGI_CGIF = "CGI.CGIF"
+    XTKS_FLEX = "XTKS.FLEX"
+    XTKT_ITCH = "XTKT.ITCH"
+    XOSE_ITCH = "XOSE.ITCH"
 
     @classmethod
     def from_int(cls, value: int) -> Dataset:
@@ -738,6 +933,28 @@ class Dataset(StringyMixin, str, Enum):
             return Dataset.XCBF_PITCH
         if value == 41:
             return Dataset.OCEA_MEMOIR
+        if value == 42:
+            return Dataset.MAIN_CGIF
+        if value == 43:
+            return Dataset.EQUS_SIP
+        if value == 44:
+            return Dataset.MSCI_CGIF
+        if value == 45:
+            return Dataset.FTSE_CGIF
+        if value == 46:
+            return Dataset.INAV_CGIF
+        if value == 47:
+            return Dataset.MSTAR_CGIF
+        if value == 48:
+            return Dataset.CCCY_CGIF
+        if value == 49:
+            return Dataset.CGI_CGIF
+        if value == 50:
+            return Dataset.XTKS_FLEX
+        if value == 51:
+            return Dataset.XTKT_ITCH
+        if value == 52:
+            return Dataset.XOSE_ITCH
         raise ValueError(f"Integer value {value} does not correspond with any Dataset variant")
 
     def to_int(self) -> int:
@@ -826,6 +1043,28 @@ class Dataset(StringyMixin, str, Enum):
             return 40
         if self == Dataset.OCEA_MEMOIR:
             return 41
+        if self == Dataset.MAIN_CGIF:
+            return 42
+        if self == Dataset.EQUS_SIP:
+            return 43
+        if self == Dataset.MSCI_CGIF:
+            return 44
+        if self == Dataset.FTSE_CGIF:
+            return 45
+        if self == Dataset.INAV_CGIF:
+            return 46
+        if self == Dataset.MSTAR_CGIF:
+            return 47
+        if self == Dataset.CCCY_CGIF:
+            return 48
+        if self == Dataset.CGI_CGIF:
+            return 49
+        if self == Dataset.XTKS_FLEX:
+            return 50
+        if self == Dataset.XTKT_ITCH:
+            return 51
+        if self == Dataset.XOSE_ITCH:
+            return 52
         raise ValueError("Invalid Dataset")
 
     @property
@@ -838,7 +1077,7 @@ class Dataset(StringyMixin, str, Enum):
         if self == Dataset.XNAS_ITCH:
             return "Nasdaq TotalView-ITCH"
         if self == Dataset.XBOS_ITCH:
-            return "Nasdaq BX TotalView-ITCH"
+            return "Nasdaq Texas TotalView-ITCH"
         if self == Dataset.XPSX_ITCH:
             return "Nasdaq PSX TotalView-ITCH"
         if self == Dataset.BATS_PITCH:
@@ -862,7 +1101,7 @@ class Dataset(StringyMixin, str, Enum):
         if self == Dataset.XCIS_TRADES:
             return "NYSE National Trades"
         if self == Dataset.MEMX_MEMOIR:
-            return "MEMX Memoir Depth"
+            return "MEMX MEMOIR Depth"
         if self == Dataset.EPRL_DOM:
             return "MIAX Pearl Depth"
         if self == Dataset.FINN_NLS:
@@ -912,9 +1151,31 @@ class Dataset(StringyMixin, str, Enum):
         if self == Dataset.XEEE_EOBI:
             return "European Energy Exchange EOBI"
         if self == Dataset.XCBF_PITCH:
-            return "Cboe Futures Exchange PITCH"
+            return "CFE Depth"
         if self == Dataset.OCEA_MEMOIR:
             return "Blue Ocean ATS MEMOIR Depth"
+        if self == Dataset.MAIN_CGIF:
+            return "Cboe Titanium Cboe Global Indices Feed"
+        if self == Dataset.EQUS_SIP:
+            return "US Equities Security Information Processor"
+        if self == Dataset.MSCI_CGIF:
+            return "CGIF - Morgan Stanley Capital International"
+        if self == Dataset.FTSE_CGIF:
+            return "CGIF - FTSE Russell"
+        if self == Dataset.INAV_CGIF:
+            return "CGIF - Intraday Net Asset Values"
+        if self == Dataset.MSTAR_CGIF:
+            return "CGIF - Morning Star"
+        if self == Dataset.CCCY_CGIF:
+            return "CGIF - Crypto Currency"
+        if self == Dataset.CGI_CGIF:
+            return "CGIF - CBOE Global Indices"
+        if self == Dataset.XTKS_FLEX:
+            return "Arrowhead FLEX"
+        if self == Dataset.XTKT_ITCH:
+            return "JPX JGATE3.0-ITCH"
+        if self == Dataset.XOSE_ITCH:
+            return "JPX JGATE3.0-ITCH"
         raise ValueError("Unexpected Dataset value")
 
 
@@ -929,7 +1190,7 @@ class Publisher(StringyMixin, str, Enum):
     XNAS_ITCH_XNAS
         Nasdaq TotalView-ITCH.
     XBOS_ITCH_XBOS
-        Nasdaq BX TotalView-ITCH.
+        Nasdaq Texas TotalView-ITCH.
     XPSX_ITCH_XPSX
         Nasdaq PSX TotalView-ITCH.
     BATS_PITCH_BATS
@@ -953,7 +1214,7 @@ class Publisher(StringyMixin, str, Enum):
     XCIS_TRADES_XCIS
         NYSE National Trades.
     MEMX_MEMOIR_MEMX
-        MEMX Memoir Depth.
+        MEMX MEMOIR Depth.
     EPRL_DOM_EPRL
         MIAX Pearl Depth.
     XNAS_NLS_FINN
@@ -989,7 +1250,7 @@ class Publisher(StringyMixin, str, Enum):
     OPRA_PILLAR_XNDQ
         OPRA - Nasdaq Options.
     OPRA_PILLAR_XBXO
-        OPRA - Nasdaq BX Options.
+        OPRA - Nasdaq Texas Options.
     OPRA_PILLAR_C2OX
         OPRA - Cboe C2 Options.
     OPRA_PILLAR_XPHL
@@ -1073,7 +1334,7 @@ class Publisher(StringyMixin, str, Enum):
     EQUS_ALL_EDGX
         Databento US Equities (All Feeds) - Cboe EDGX.
     EQUS_ALL_XBOS
-        Databento US Equities (All Feeds) - Nasdaq BX.
+        Databento US Equities (All Feeds) - Nasdaq Texas.
     EQUS_ALL_XPSX
         Databento US Equities (All Feeds) - Nasdaq PSX.
     EQUS_ALL_MEMX
@@ -1095,11 +1356,11 @@ class Publisher(StringyMixin, str, Enum):
     NDEX_IMPACT_XOFF
         ICE Endex - Off-Market Trades.
     XNAS_NLS_XBOS
-        Nasdaq NLS - Nasdaq BX.
+        Nasdaq NLS - Nasdaq Texas.
     XNAS_NLS_XPSX
         Nasdaq NLS - Nasdaq PSX.
     XNAS_BASIC_XBOS
-        Nasdaq Basic - Nasdaq BX.
+        Nasdaq Basic - Nasdaq Texas.
     XNAS_BASIC_XPSX
         Nasdaq Basic - Nasdaq PSX.
     EQUS_SUMMARY_EQUS
@@ -1133,11 +1394,87 @@ class Publisher(StringyMixin, str, Enum):
     XEEE_EOBI_XOFF
         European Energy Exchange EOBI - Off-Market Trades.
     XCBF_PITCH_XCBF
-        Cboe Futures Exchange.
+        Cboe Futures Exchange (CFE).
     XCBF_PITCH_XOFF
-        Cboe Futures Exchange - Off-Market Trades.
+        Cboe Futures Exchange (CFE) - Off-Market Trades.
     OCEA_MEMOIR_OCEA
         Blue Ocean ATS MEMOIR.
+    OPRA_PILLAR_MXTO
+        OPRA - MEMX MX2 Options.
+    OPRA_PILLAR_IEXO
+        OPRA - IEX Options LLC.
+    MAIN_CGIF_MAIN
+        Cboe Global Indices Feed.
+    EQUS_SIP_XASE
+        US Equities SIP - NYSE American.
+    EQUS_SIP_XBOS
+        US Equities SIP - Nasdaq Texas.
+    EQUS_SIP_XCIS
+        US Equities SIP - NYSE National.
+    EQUS_SIP_TXSE
+        US Equities SIP - Texas Stock Exchange.
+    EQUS_SIP_24EQ
+        US Equities SIP - 24X National Exchange.
+    EQUS_SIP_EPRL
+        US Equities SIP - MIAX Pearl.
+    EQUS_SIP_XISX
+        US Equities SIP - Nasdaq ISE.
+    EQUS_SIP_EDGA
+        US Equities SIP - Cboe EDGA.
+    EQUS_SIP_EDGX
+        US Equities SIP - Cboe EDGX.
+    EQUS_SIP_LTSE
+        US Equities SIP - Long-Term Stock Exchange.
+    EQUS_SIP_XCHI
+        US Equities SIP - NYSE Texas.
+    EQUS_SIP_XNYS
+        US Equities SIP - NYSE.
+    EQUS_SIP_ARCX
+        US Equities SIP - NYSE Arca.
+    EQUS_SIP_XNAS
+        US Equities SIP - Nasdaq.
+    EQUS_SIP_MEMX
+        US Equities SIP - MEMX.
+    EQUS_SIP_IEXG
+        US Equities SIP - IEX.
+    EQUS_SIP_XPSX
+        US Equities SIP - Nasdaq PSX.
+    EQUS_SIP_BATY
+        US Equities SIP - Cboe BYX.
+    EQUS_SIP_BATS
+        US Equities SIP - Cboe BZX.
+    EQUS_SIP_FINN
+        US Equities SIP - FINRA/Nasdaq TRF Carteret.
+    EQUS_SIP_FINY
+        US Equities SIP - FINRA/NYSE TRF.
+    EQUS_SIP_FINC
+        US Equities SIP - FINRA/Nasdaq TRF Chicago.
+    EQUS_SIP_XADF
+        US Equities SIP - FINRA Alternative Display Facility.
+    EQUS_SIP_CTA
+        US Equities SIP - CTA.
+    EQUS_SIP_UTP
+        US Equities SIP - UTP.
+    MSCI_CGIF_MSCI
+        CGIF - Morgan Stanley Capital International.
+    FTSE_CGIF_FTSE
+        CGIF - FTSE Russell.
+    INAV_CGIF_INAV
+        CGIF - Intraday Net Asset Values.
+    MSTAR_CGIF_MSTAR
+        CGIF - Morning Star.
+    CCCY_CGIF_CCCY
+        CGIF - Crypto Currency.
+    CGI_CGIF_CGI
+        CGIF - CBOE Global Indices.
+    MAIN_CGIF_DEF
+        CGIF - Definitions.
+    XTKS_FLEX_XTKS
+        JPX - Tokyo Stock Exchange.
+    XTKT_ITCH_XTKT
+        JPX - Tokyo Commodity Exchange.
+    XOSE_ITCH_XOSE
+        JPX - Osaka Exchange.
 
     """
 
@@ -1248,6 +1585,44 @@ class Publisher(StringyMixin, str, Enum):
     XCBF_PITCH_XCBF = "XCBF.PITCH.XCBF"
     XCBF_PITCH_XOFF = "XCBF.PITCH.XOFF"
     OCEA_MEMOIR_OCEA = "OCEA.MEMOIR.OCEA"
+    OPRA_PILLAR_MXTO = "OPRA.PILLAR.MXTO"
+    OPRA_PILLAR_IEXO = "OPRA.PILLAR.IEXO"
+    MAIN_CGIF_MAIN = "MAIN.CGIF.MAIN"
+    EQUS_SIP_XASE = "EQUS.SIP.XASE"
+    EQUS_SIP_XBOS = "EQUS.SIP.XBOS"
+    EQUS_SIP_XCIS = "EQUS.SIP.XCIS"
+    EQUS_SIP_TXSE = "EQUS.SIP.TXSE"
+    EQUS_SIP_24EQ = "EQUS.SIP.24EQ"
+    EQUS_SIP_EPRL = "EQUS.SIP.EPRL"
+    EQUS_SIP_XISX = "EQUS.SIP.XISX"
+    EQUS_SIP_EDGA = "EQUS.SIP.EDGA"
+    EQUS_SIP_EDGX = "EQUS.SIP.EDGX"
+    EQUS_SIP_LTSE = "EQUS.SIP.LTSE"
+    EQUS_SIP_XCHI = "EQUS.SIP.XCHI"
+    EQUS_SIP_XNYS = "EQUS.SIP.XNYS"
+    EQUS_SIP_ARCX = "EQUS.SIP.ARCX"
+    EQUS_SIP_XNAS = "EQUS.SIP.XNAS"
+    EQUS_SIP_MEMX = "EQUS.SIP.MEMX"
+    EQUS_SIP_IEXG = "EQUS.SIP.IEXG"
+    EQUS_SIP_XPSX = "EQUS.SIP.XPSX"
+    EQUS_SIP_BATY = "EQUS.SIP.BATY"
+    EQUS_SIP_BATS = "EQUS.SIP.BATS"
+    EQUS_SIP_FINN = "EQUS.SIP.FINN"
+    EQUS_SIP_FINY = "EQUS.SIP.FINY"
+    EQUS_SIP_FINC = "EQUS.SIP.FINC"
+    EQUS_SIP_XADF = "EQUS.SIP.XADF"
+    EQUS_SIP_CTA = "EQUS.SIP.CTA"
+    EQUS_SIP_UTP = "EQUS.SIP.UTP"
+    MSCI_CGIF_MSCI = "MSCI.CGIF.MSCI"
+    FTSE_CGIF_FTSE = "FTSE.CGIF.FTSE"
+    INAV_CGIF_INAV = "INAV.CGIF.INAV"
+    MSTAR_CGIF_MSTAR = "MSTAR.CGIF.MSTAR"
+    CCCY_CGIF_CCCY = "CCCY.CGIF.CCCY"
+    CGI_CGIF_CGI = "CGI.CGIF.CGI"
+    MAIN_CGIF_DEF = "MAIN.CGIF.DEF"
+    XTKS_FLEX_XTKS = "XTKS.FLEX.XTKS"
+    XTKT_ITCH_XTKT = "XTKT.ITCH.XTKT"
+    XOSE_ITCH_XOSE = "XOSE.ITCH.XOSE"
 
     @classmethod
     def from_int(cls, value: int) -> Publisher:
@@ -1468,6 +1843,82 @@ class Publisher(StringyMixin, str, Enum):
             return Publisher.XCBF_PITCH_XOFF
         if value == 107:
             return Publisher.OCEA_MEMOIR_OCEA
+        if value == 108:
+            return Publisher.OPRA_PILLAR_MXTO
+        if value == 109:
+            return Publisher.OPRA_PILLAR_IEXO
+        if value == 110:
+            return Publisher.MAIN_CGIF_MAIN
+        if value == 111:
+            return Publisher.EQUS_SIP_XASE
+        if value == 112:
+            return Publisher.EQUS_SIP_XBOS
+        if value == 113:
+            return Publisher.EQUS_SIP_XCIS
+        if value == 114:
+            return Publisher.EQUS_SIP_TXSE
+        if value == 115:
+            return Publisher.EQUS_SIP_24EQ
+        if value == 116:
+            return Publisher.EQUS_SIP_EPRL
+        if value == 117:
+            return Publisher.EQUS_SIP_XISX
+        if value == 118:
+            return Publisher.EQUS_SIP_EDGA
+        if value == 119:
+            return Publisher.EQUS_SIP_EDGX
+        if value == 120:
+            return Publisher.EQUS_SIP_LTSE
+        if value == 121:
+            return Publisher.EQUS_SIP_XCHI
+        if value == 122:
+            return Publisher.EQUS_SIP_XNYS
+        if value == 123:
+            return Publisher.EQUS_SIP_ARCX
+        if value == 124:
+            return Publisher.EQUS_SIP_XNAS
+        if value == 125:
+            return Publisher.EQUS_SIP_MEMX
+        if value == 126:
+            return Publisher.EQUS_SIP_IEXG
+        if value == 127:
+            return Publisher.EQUS_SIP_XPSX
+        if value == 128:
+            return Publisher.EQUS_SIP_BATY
+        if value == 129:
+            return Publisher.EQUS_SIP_BATS
+        if value == 130:
+            return Publisher.EQUS_SIP_FINN
+        if value == 131:
+            return Publisher.EQUS_SIP_FINY
+        if value == 132:
+            return Publisher.EQUS_SIP_FINC
+        if value == 133:
+            return Publisher.EQUS_SIP_XADF
+        if value == 134:
+            return Publisher.EQUS_SIP_CTA
+        if value == 135:
+            return Publisher.EQUS_SIP_UTP
+        if value == 136:
+            return Publisher.MSCI_CGIF_MSCI
+        if value == 137:
+            return Publisher.FTSE_CGIF_FTSE
+        if value == 138:
+            return Publisher.INAV_CGIF_INAV
+        if value == 139:
+            return Publisher.MSTAR_CGIF_MSTAR
+        if value == 140:
+            return Publisher.CCCY_CGIF_CCCY
+        if value == 141:
+            return Publisher.CGI_CGIF_CGI
+        if value == 142:
+            return Publisher.MAIN_CGIF_DEF
+        if value == 143:
+            return Publisher.XTKS_FLEX_XTKS
+        if value == 144:
+            return Publisher.XTKT_ITCH_XTKT
+        if value == 145:
+            return Publisher.XOSE_ITCH_XOSE
         raise ValueError(f"Integer value {value} does not correspond with any Publisher variant")
 
     def to_int(self) -> int:
@@ -1688,6 +2139,82 @@ class Publisher(StringyMixin, str, Enum):
             return 106
         if self == Publisher.OCEA_MEMOIR_OCEA:
             return 107
+        if self == Publisher.OPRA_PILLAR_MXTO:
+            return 108
+        if self == Publisher.OPRA_PILLAR_IEXO:
+            return 109
+        if self == Publisher.MAIN_CGIF_MAIN:
+            return 110
+        if self == Publisher.EQUS_SIP_XASE:
+            return 111
+        if self == Publisher.EQUS_SIP_XBOS:
+            return 112
+        if self == Publisher.EQUS_SIP_XCIS:
+            return 113
+        if self == Publisher.EQUS_SIP_TXSE:
+            return 114
+        if self == Publisher.EQUS_SIP_24EQ:
+            return 115
+        if self == Publisher.EQUS_SIP_EPRL:
+            return 116
+        if self == Publisher.EQUS_SIP_XISX:
+            return 117
+        if self == Publisher.EQUS_SIP_EDGA:
+            return 118
+        if self == Publisher.EQUS_SIP_EDGX:
+            return 119
+        if self == Publisher.EQUS_SIP_LTSE:
+            return 120
+        if self == Publisher.EQUS_SIP_XCHI:
+            return 121
+        if self == Publisher.EQUS_SIP_XNYS:
+            return 122
+        if self == Publisher.EQUS_SIP_ARCX:
+            return 123
+        if self == Publisher.EQUS_SIP_XNAS:
+            return 124
+        if self == Publisher.EQUS_SIP_MEMX:
+            return 125
+        if self == Publisher.EQUS_SIP_IEXG:
+            return 126
+        if self == Publisher.EQUS_SIP_XPSX:
+            return 127
+        if self == Publisher.EQUS_SIP_BATY:
+            return 128
+        if self == Publisher.EQUS_SIP_BATS:
+            return 129
+        if self == Publisher.EQUS_SIP_FINN:
+            return 130
+        if self == Publisher.EQUS_SIP_FINY:
+            return 131
+        if self == Publisher.EQUS_SIP_FINC:
+            return 132
+        if self == Publisher.EQUS_SIP_XADF:
+            return 133
+        if self == Publisher.EQUS_SIP_CTA:
+            return 134
+        if self == Publisher.EQUS_SIP_UTP:
+            return 135
+        if self == Publisher.MSCI_CGIF_MSCI:
+            return 136
+        if self == Publisher.FTSE_CGIF_FTSE:
+            return 137
+        if self == Publisher.INAV_CGIF_INAV:
+            return 138
+        if self == Publisher.MSTAR_CGIF_MSTAR:
+            return 139
+        if self == Publisher.CCCY_CGIF_CCCY:
+            return 140
+        if self == Publisher.CGI_CGIF_CGI:
+            return 141
+        if self == Publisher.MAIN_CGIF_DEF:
+            return 142
+        if self == Publisher.XTKS_FLEX_XTKS:
+            return 143
+        if self == Publisher.XTKT_ITCH_XTKT:
+            return 144
+        if self == Publisher.XOSE_ITCH_XOSE:
+            return 145
         raise ValueError("Invalid Publisher")
 
     @property
@@ -1909,6 +2436,82 @@ class Publisher(StringyMixin, str, Enum):
             return Venue.XOFF
         if self == Publisher.OCEA_MEMOIR_OCEA:
             return Venue.OCEA
+        if self == Publisher.OPRA_PILLAR_MXTO:
+            return Venue.MXTO
+        if self == Publisher.OPRA_PILLAR_IEXO:
+            return Venue.IEXO
+        if self == Publisher.MAIN_CGIF_MAIN:
+            return Venue.MAIN
+        if self == Publisher.EQUS_SIP_XASE:
+            return Venue.XASE
+        if self == Publisher.EQUS_SIP_XBOS:
+            return Venue.XBOS
+        if self == Publisher.EQUS_SIP_XCIS:
+            return Venue.XCIS
+        if self == Publisher.EQUS_SIP_TXSE:
+            return Venue.TXSE
+        if self == Publisher.EQUS_SIP_24EQ:
+            return Venue._24EQ
+        if self == Publisher.EQUS_SIP_EPRL:
+            return Venue.EPRL
+        if self == Publisher.EQUS_SIP_XISX:
+            return Venue.XISX
+        if self == Publisher.EQUS_SIP_EDGA:
+            return Venue.EDGA
+        if self == Publisher.EQUS_SIP_EDGX:
+            return Venue.EDGX
+        if self == Publisher.EQUS_SIP_LTSE:
+            return Venue.LTSE
+        if self == Publisher.EQUS_SIP_XCHI:
+            return Venue.XCHI
+        if self == Publisher.EQUS_SIP_XNYS:
+            return Venue.XNYS
+        if self == Publisher.EQUS_SIP_ARCX:
+            return Venue.ARCX
+        if self == Publisher.EQUS_SIP_XNAS:
+            return Venue.XNAS
+        if self == Publisher.EQUS_SIP_MEMX:
+            return Venue.MEMX
+        if self == Publisher.EQUS_SIP_IEXG:
+            return Venue.IEXG
+        if self == Publisher.EQUS_SIP_XPSX:
+            return Venue.XPSX
+        if self == Publisher.EQUS_SIP_BATY:
+            return Venue.BATY
+        if self == Publisher.EQUS_SIP_BATS:
+            return Venue.BATS
+        if self == Publisher.EQUS_SIP_FINN:
+            return Venue.FINN
+        if self == Publisher.EQUS_SIP_FINY:
+            return Venue.FINY
+        if self == Publisher.EQUS_SIP_FINC:
+            return Venue.FINC
+        if self == Publisher.EQUS_SIP_XADF:
+            return Venue.XADF
+        if self == Publisher.EQUS_SIP_CTA:
+            return Venue.CTA
+        if self == Publisher.EQUS_SIP_UTP:
+            return Venue.UTP
+        if self == Publisher.MSCI_CGIF_MSCI:
+            return Venue.MSCI
+        if self == Publisher.FTSE_CGIF_FTSE:
+            return Venue.FTSE
+        if self == Publisher.INAV_CGIF_INAV:
+            return Venue.INAV
+        if self == Publisher.MSTAR_CGIF_MSTAR:
+            return Venue.MSTAR
+        if self == Publisher.CCCY_CGIF_CCCY:
+            return Venue.CCCY
+        if self == Publisher.CGI_CGIF_CGI:
+            return Venue.CGI
+        if self == Publisher.MAIN_CGIF_DEF:
+            return Venue.DEF
+        if self == Publisher.XTKS_FLEX_XTKS:
+            return Venue.XTKS
+        if self == Publisher.XTKT_ITCH_XTKT:
+            return Venue.XTKT
+        if self == Publisher.XOSE_ITCH_XOSE:
+            return Venue.XOSE
         raise ValueError("Unexpected Publisher value")
 
     @property
@@ -2130,6 +2733,82 @@ class Publisher(StringyMixin, str, Enum):
             return Dataset.XCBF_PITCH
         if self == Publisher.OCEA_MEMOIR_OCEA:
             return Dataset.OCEA_MEMOIR
+        if self == Publisher.OPRA_PILLAR_MXTO:
+            return Dataset.OPRA_PILLAR
+        if self == Publisher.OPRA_PILLAR_IEXO:
+            return Dataset.OPRA_PILLAR
+        if self == Publisher.MAIN_CGIF_MAIN:
+            return Dataset.MAIN_CGIF
+        if self == Publisher.EQUS_SIP_XASE:
+            return Dataset.EQUS_SIP
+        if self == Publisher.EQUS_SIP_XBOS:
+            return Dataset.EQUS_SIP
+        if self == Publisher.EQUS_SIP_XCIS:
+            return Dataset.EQUS_SIP
+        if self == Publisher.EQUS_SIP_TXSE:
+            return Dataset.EQUS_SIP
+        if self == Publisher.EQUS_SIP_24EQ:
+            return Dataset.EQUS_SIP
+        if self == Publisher.EQUS_SIP_EPRL:
+            return Dataset.EQUS_SIP
+        if self == Publisher.EQUS_SIP_XISX:
+            return Dataset.EQUS_SIP
+        if self == Publisher.EQUS_SIP_EDGA:
+            return Dataset.EQUS_SIP
+        if self == Publisher.EQUS_SIP_EDGX:
+            return Dataset.EQUS_SIP
+        if self == Publisher.EQUS_SIP_LTSE:
+            return Dataset.EQUS_SIP
+        if self == Publisher.EQUS_SIP_XCHI:
+            return Dataset.EQUS_SIP
+        if self == Publisher.EQUS_SIP_XNYS:
+            return Dataset.EQUS_SIP
+        if self == Publisher.EQUS_SIP_ARCX:
+            return Dataset.EQUS_SIP
+        if self == Publisher.EQUS_SIP_XNAS:
+            return Dataset.EQUS_SIP
+        if self == Publisher.EQUS_SIP_MEMX:
+            return Dataset.EQUS_SIP
+        if self == Publisher.EQUS_SIP_IEXG:
+            return Dataset.EQUS_SIP
+        if self == Publisher.EQUS_SIP_XPSX:
+            return Dataset.EQUS_SIP
+        if self == Publisher.EQUS_SIP_BATY:
+            return Dataset.EQUS_SIP
+        if self == Publisher.EQUS_SIP_BATS:
+            return Dataset.EQUS_SIP
+        if self == Publisher.EQUS_SIP_FINN:
+            return Dataset.EQUS_SIP
+        if self == Publisher.EQUS_SIP_FINY:
+            return Dataset.EQUS_SIP
+        if self == Publisher.EQUS_SIP_FINC:
+            return Dataset.EQUS_SIP
+        if self == Publisher.EQUS_SIP_XADF:
+            return Dataset.EQUS_SIP
+        if self == Publisher.EQUS_SIP_CTA:
+            return Dataset.EQUS_SIP
+        if self == Publisher.EQUS_SIP_UTP:
+            return Dataset.EQUS_SIP
+        if self == Publisher.MSCI_CGIF_MSCI:
+            return Dataset.MSCI_CGIF
+        if self == Publisher.FTSE_CGIF_FTSE:
+            return Dataset.FTSE_CGIF
+        if self == Publisher.INAV_CGIF_INAV:
+            return Dataset.INAV_CGIF
+        if self == Publisher.MSTAR_CGIF_MSTAR:
+            return Dataset.MSTAR_CGIF
+        if self == Publisher.CCCY_CGIF_CCCY:
+            return Dataset.CCCY_CGIF
+        if self == Publisher.CGI_CGIF_CGI:
+            return Dataset.CGI_CGIF
+        if self == Publisher.MAIN_CGIF_DEF:
+            return Dataset.MAIN_CGIF
+        if self == Publisher.XTKS_FLEX_XTKS:
+            return Dataset.XTKS_FLEX
+        if self == Publisher.XTKT_ITCH_XTKT:
+            return Dataset.XTKT_ITCH
+        if self == Publisher.XOSE_ITCH_XOSE:
+            return Dataset.XOSE_ITCH
         raise ValueError("Unexpected Publisher value")
 
     @property
@@ -2142,7 +2821,7 @@ class Publisher(StringyMixin, str, Enum):
         if self == Publisher.XNAS_ITCH_XNAS:
             return "Nasdaq TotalView-ITCH"
         if self == Publisher.XBOS_ITCH_XBOS:
-            return "Nasdaq BX TotalView-ITCH"
+            return "Nasdaq Texas TotalView-ITCH"
         if self == Publisher.XPSX_ITCH_XPSX:
             return "Nasdaq PSX TotalView-ITCH"
         if self == Publisher.BATS_PITCH_BATS:
@@ -2166,7 +2845,7 @@ class Publisher(StringyMixin, str, Enum):
         if self == Publisher.XCIS_TRADES_XCIS:
             return "NYSE National Trades"
         if self == Publisher.MEMX_MEMOIR_MEMX:
-            return "MEMX Memoir Depth"
+            return "MEMX MEMOIR Depth"
         if self == Publisher.EPRL_DOM_EPRL:
             return "MIAX Pearl Depth"
         if self == Publisher.XNAS_NLS_FINN:
@@ -2202,7 +2881,7 @@ class Publisher(StringyMixin, str, Enum):
         if self == Publisher.OPRA_PILLAR_XNDQ:
             return "OPRA - Nasdaq Options"
         if self == Publisher.OPRA_PILLAR_XBXO:
-            return "OPRA - Nasdaq BX Options"
+            return "OPRA - Nasdaq Texas Options"
         if self == Publisher.OPRA_PILLAR_C2OX:
             return "OPRA - Cboe C2 Options"
         if self == Publisher.OPRA_PILLAR_XPHL:
@@ -2286,7 +2965,7 @@ class Publisher(StringyMixin, str, Enum):
         if self == Publisher.EQUS_ALL_EDGX:
             return "Databento US Equities (All Feeds) - Cboe EDGX"
         if self == Publisher.EQUS_ALL_XBOS:
-            return "Databento US Equities (All Feeds) - Nasdaq BX"
+            return "Databento US Equities (All Feeds) - Nasdaq Texas"
         if self == Publisher.EQUS_ALL_XPSX:
             return "Databento US Equities (All Feeds) - Nasdaq PSX"
         if self == Publisher.EQUS_ALL_MEMX:
@@ -2308,11 +2987,11 @@ class Publisher(StringyMixin, str, Enum):
         if self == Publisher.NDEX_IMPACT_XOFF:
             return "ICE Endex - Off-Market Trades"
         if self == Publisher.XNAS_NLS_XBOS:
-            return "Nasdaq NLS - Nasdaq BX"
+            return "Nasdaq NLS - Nasdaq Texas"
         if self == Publisher.XNAS_NLS_XPSX:
             return "Nasdaq NLS - Nasdaq PSX"
         if self == Publisher.XNAS_BASIC_XBOS:
-            return "Nasdaq Basic - Nasdaq BX"
+            return "Nasdaq Basic - Nasdaq Texas"
         if self == Publisher.XNAS_BASIC_XPSX:
             return "Nasdaq Basic - Nasdaq PSX"
         if self == Publisher.EQUS_SUMMARY_EQUS:
@@ -2346,9 +3025,85 @@ class Publisher(StringyMixin, str, Enum):
         if self == Publisher.XEEE_EOBI_XOFF:
             return "European Energy Exchange EOBI - Off-Market Trades"
         if self == Publisher.XCBF_PITCH_XCBF:
-            return "Cboe Futures Exchange"
+            return "Cboe Futures Exchange (CFE)"
         if self == Publisher.XCBF_PITCH_XOFF:
-            return "Cboe Futures Exchange - Off-Market Trades"
+            return "Cboe Futures Exchange (CFE) - Off-Market Trades"
         if self == Publisher.OCEA_MEMOIR_OCEA:
             return "Blue Ocean ATS MEMOIR"
+        if self == Publisher.OPRA_PILLAR_MXTO:
+            return "OPRA - MEMX MX2 Options"
+        if self == Publisher.OPRA_PILLAR_IEXO:
+            return "OPRA - IEX Options LLC"
+        if self == Publisher.MAIN_CGIF_MAIN:
+            return "Cboe Global Indices Feed"
+        if self == Publisher.EQUS_SIP_XASE:
+            return "US Equities SIP - NYSE American"
+        if self == Publisher.EQUS_SIP_XBOS:
+            return "US Equities SIP - Nasdaq Texas"
+        if self == Publisher.EQUS_SIP_XCIS:
+            return "US Equities SIP - NYSE National"
+        if self == Publisher.EQUS_SIP_TXSE:
+            return "US Equities SIP - Texas Stock Exchange"
+        if self == Publisher.EQUS_SIP_24EQ:
+            return "US Equities SIP - 24X National Exchange"
+        if self == Publisher.EQUS_SIP_EPRL:
+            return "US Equities SIP - MIAX Pearl"
+        if self == Publisher.EQUS_SIP_XISX:
+            return "US Equities SIP - Nasdaq ISE"
+        if self == Publisher.EQUS_SIP_EDGA:
+            return "US Equities SIP - Cboe EDGA"
+        if self == Publisher.EQUS_SIP_EDGX:
+            return "US Equities SIP - Cboe EDGX"
+        if self == Publisher.EQUS_SIP_LTSE:
+            return "US Equities SIP - Long-Term Stock Exchange"
+        if self == Publisher.EQUS_SIP_XCHI:
+            return "US Equities SIP - NYSE Texas"
+        if self == Publisher.EQUS_SIP_XNYS:
+            return "US Equities SIP - NYSE"
+        if self == Publisher.EQUS_SIP_ARCX:
+            return "US Equities SIP - NYSE Arca"
+        if self == Publisher.EQUS_SIP_XNAS:
+            return "US Equities SIP - Nasdaq"
+        if self == Publisher.EQUS_SIP_MEMX:
+            return "US Equities SIP - MEMX"
+        if self == Publisher.EQUS_SIP_IEXG:
+            return "US Equities SIP - IEX"
+        if self == Publisher.EQUS_SIP_XPSX:
+            return "US Equities SIP - Nasdaq PSX"
+        if self == Publisher.EQUS_SIP_BATY:
+            return "US Equities SIP - Cboe BYX"
+        if self == Publisher.EQUS_SIP_BATS:
+            return "US Equities SIP - Cboe BZX"
+        if self == Publisher.EQUS_SIP_FINN:
+            return "US Equities SIP - FINRA/Nasdaq TRF Carteret"
+        if self == Publisher.EQUS_SIP_FINY:
+            return "US Equities SIP - FINRA/NYSE TRF"
+        if self == Publisher.EQUS_SIP_FINC:
+            return "US Equities SIP - FINRA/Nasdaq TRF Chicago"
+        if self == Publisher.EQUS_SIP_XADF:
+            return "US Equities SIP - FINRA Alternative Display Facility"
+        if self == Publisher.EQUS_SIP_CTA:
+            return "US Equities SIP - CTA"
+        if self == Publisher.EQUS_SIP_UTP:
+            return "US Equities SIP - UTP"
+        if self == Publisher.MSCI_CGIF_MSCI:
+            return "CGIF - Morgan Stanley Capital International"
+        if self == Publisher.FTSE_CGIF_FTSE:
+            return "CGIF - FTSE Russell"
+        if self == Publisher.INAV_CGIF_INAV:
+            return "CGIF - Intraday Net Asset Values"
+        if self == Publisher.MSTAR_CGIF_MSTAR:
+            return "CGIF - Morning Star"
+        if self == Publisher.CCCY_CGIF_CCCY:
+            return "CGIF - Crypto Currency"
+        if self == Publisher.CGI_CGIF_CGI:
+            return "CGIF - CBOE Global Indices"
+        if self == Publisher.MAIN_CGIF_DEF:
+            return "CGIF - Definitions"
+        if self == Publisher.XTKS_FLEX_XTKS:
+            return "JPX - Tokyo Stock Exchange"
+        if self == Publisher.XTKT_ITCH_XTKT:
+            return "JPX - Tokyo Commodity Exchange"
+        if self == Publisher.XOSE_ITCH_XOSE:
+            return "JPX - Osaka Exchange"
         raise ValueError("Unexpected Publisher value")

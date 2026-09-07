@@ -14,6 +14,7 @@ from typing import IO
 
 import databento_dbn
 import pandas as pd
+from databento_dbn import Compression
 from databento_dbn import DBNRecord
 from databento_dbn import Schema
 from databento_dbn import SType
@@ -21,6 +22,7 @@ from databento_dbn import SType
 from databento.common.constants import ALL_SYMBOLS
 from databento.common.cram import BUCKET_ID_LENGTH
 from databento.common.enums import ReconnectPolicy
+from databento.common.enums import SlowReaderBehavior
 from databento.common.error import BentoError
 from databento.common.parsing import optional_datetime_to_unix_nanoseconds
 from databento.common.publishers import Dataset
@@ -58,21 +60,28 @@ class Live:
     heartbeat_interval_s: int, optional
         The interval in seconds at which the gateway will send heartbeat records if no
         other data records are sent. By default heartbeats will be sent at the gateway's
-        default interval. Minimum interval is 5 seconds.
+        default interval. Must be between 5 and 1800 seconds.
     reconnect_policy: ReconnectPolicy | str, optional
         The reconnect policy for the live session.
             - "none": the client will not reconnect (default)
             - "reconnect": the client will reconnect automatically
+    slow_reader_behavior: SlowReadBehavior | str, optional
+        The live gateway behavior when the client falls behind real time.
+            - "skip": skip records to immediately catch up
+            - "warn": send a slow reader warning `SystemMsg` but continue reading every record
+    compression : Compression or str, default "none"
+        The compression format for live data. Set to "zstd" for
+        Zstandard-compressed data from the gateway.
+    loop : asyncio.AbstractEventLoop, optional
+        The event loop to run the client connection in. The loop must already be
+        running on another thread than the caller's. If unspecified, a shared
+        event loop running on a background thread will be used.
 
     """
 
-    _loop = asyncio.new_event_loop()
+    _shared_loop: asyncio.AbstractEventLoop | None = None
     _lock = threading.Lock()
-    _thread = threading.Thread(
-        target=_loop.run_forever,
-        name="databento_live",
-        daemon=True,
-    )
+    _thread: threading.Thread | None = None
 
     def __init__(
         self,
@@ -82,6 +91,9 @@ class Live:
         ts_out: bool = False,
         heartbeat_interval_s: int | None = None,
         reconnect_policy: ReconnectPolicy | str = ReconnectPolicy.NONE,
+        slow_reader_behavior: SlowReaderBehavior | str | None = None,
+        compression: Compression = Compression.NONE,
+        loop: asyncio.AbstractEventLoop | None = None,
     ) -> None:
         if key is None:
             key = os.environ.get("DATABENTO_API_KEY")
@@ -99,7 +111,9 @@ class Live:
 
         self._dataset: Dataset | str = ""
         self._ts_out = ts_out
+        self._compression = compression
         self._heartbeat_interval_s = heartbeat_interval_s
+        self._loop = loop if loop is not None else Live._get_shared_loop()
 
         self._metadata: SessionMetadata = SessionMetadata()
         self._symbology_map: dict[int, str | int] = {}
@@ -112,13 +126,24 @@ class Live:
             user_gateway=self._gateway,
             user_port=port,
             reconnect_policy=reconnect_policy,
+            slow_reader_behavior=slow_reader_behavior,
+            compression=compression,
         )
 
         self._session._user_callbacks.append(ClientRecordCallback(self._map_symbol))
 
-        with Live._lock:
-            if not Live._thread.is_alive():
-                Live._thread.start()
+    @classmethod
+    def _get_shared_loop(cls) -> asyncio.AbstractEventLoop:
+        with cls._lock:
+            if cls._shared_loop is None:
+                cls._shared_loop = asyncio.new_event_loop()
+                cls._thread = threading.Thread(
+                    target=cls._shared_loop.run_forever,
+                    name="databento_live",
+                    daemon=True,
+                )
+                cls._thread.start()
+            return cls._shared_loop
 
     def __del__(self) -> None:
         try:
@@ -145,8 +170,9 @@ class Live:
     @property
     def dataset(self) -> str:
         """
-        Return the dataset for this live client. If no subscriptions have been
-        made an empty string will be returned.
+        Return the dataset for this live client.
+
+        If no subscriptions have been made an empty string will be returned.
 
         Returns
         -------
@@ -220,8 +246,9 @@ class Live:
     @property
     def session_id(self) -> str | None:
         """
-        Return the session ID for the current session. If `None`, the client is
-        not connected.
+        Return the session ID for the current session.
+
+        If `None`, the client is not connected.
 
         Returns
         -------
@@ -265,8 +292,9 @@ class Live:
     @property
     def symbology_map(self) -> dict[int, str | int]:
         """
-        Return the symbology map for this client session. A symbol mapping is
-        added when the client receives a SymbolMappingMsg.
+        Return the symbology map for this client session.
+
+        A symbol mapping is added when the client receives a SymbolMappingMsg.
 
         This can be used to transform an `instrument_id` in a DBN record
         to the input symbology.
@@ -290,6 +318,18 @@ class Live:
 
         """
         return self._ts_out
+
+    @property
+    def compression(self) -> Compression:
+        """
+        Returns the compression mode for this live client.
+
+        Returns
+        -------
+        Compression
+
+        """
+        return self._compression
 
     def add_callback(
         self,
@@ -372,8 +412,9 @@ class Live:
         exception_callback: ExceptionCallback | None = None,
     ) -> None:
         """
-        Add a callback for handling client reconnection events. This will only
-        be called when using a reconnection policy other than
+        Add a callback for handling client reconnection events.
+
+        This will only be called when using a reconnection policy other than
         `ReconnectPolicy.NONE` and if the session has been started with
         `Live.start`.
 
@@ -588,8 +629,9 @@ class Live:
         timeout: float | None = None,
     ) -> None:
         """
-        Block until the session closes or a timeout is reached. A session will
-        close after the remote gateway disconnects, or after `Live.stop` or
+        Block until the session closes or a timeout is reached.
+
+        A session will close after the remote gateway disconnects, or after `Live.stop` or
         `Live.terminate` are called.
 
         If a `timeout` is specified, `Live.terminate` will be called when the
@@ -618,7 +660,7 @@ class Live:
         try:
             asyncio.run_coroutine_threadsafe(
                 self._session.wait_for_close(),
-                loop=Live._loop,
+                loop=self._loop,
             ).result(timeout=timeout)
         except (futures.TimeoutError, KeyboardInterrupt) as exc:
             logger.info("closing session due to %s", type(exc).__name__)
@@ -635,8 +677,9 @@ class Live:
         timeout: float | None = None,
     ) -> None:
         """
-        Coroutine to wait until the session closes or a timeout is reached. A
-        session will close when the remote gateway disconnects, or after
+        Coroutine to wait until the session closes or a timeout is reached.
+
+        A session will close when the remote gateway disconnects, or after
         `Live.stop` or `Live.terminate` are called.
 
         If a `timeout` is specified, `Live.terminate` will be called when the
@@ -665,7 +708,7 @@ class Live:
         waiter = asyncio.wrap_future(
             asyncio.run_coroutine_threadsafe(
                 self._session.wait_for_close(),
-                loop=Live._loop,
+                loop=self._loop,
             ),
         )
 
@@ -692,8 +735,9 @@ class Live:
 
 class LiveIterator:
     """
-    Iterator class for the `Live` client. Automatically starts the client when
-    created and will stop it when destroyed. This provides context-manager-like
+    Iterator class for the `Live` client.
+
+    Automatically starts the client when created and will stop it when destroyed. This provides context-manager-like
     behavior to for loops.
 
     Parameters

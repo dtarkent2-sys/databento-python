@@ -15,6 +15,7 @@ def test_mbo_fields() -> None:
     fields.remove("record_size")
     fields.remove("size_hint")
     fields.remove("ts_index")
+    fields.remove("ts_out")
 
     # Act
     difference = fields.symmetric_difference(struct._ordered_fields)
@@ -45,15 +46,13 @@ def test_mbp_fields(
     fields.remove("record_size")
     fields.remove("size_hint")
     fields.remove("ts_index")
+    fields.remove("ts_out")
 
     # Act
     difference = fields.symmetric_difference(struct._ordered_fields)
 
     # Assert
-    assert "levels" in difference
-
-    # bid/ask size, price, ct for each level, plus the levels field
-    assert len(difference) == 6 * level_count + 1
+    assert difference == {"levels"}
 
 
 @pytest.mark.parametrize(
@@ -78,6 +77,7 @@ def test_ohlcv_fields(
     fields.remove("record_size")
     fields.remove("size_hint")
     fields.remove("ts_index")
+    fields.remove("ts_out")
 
     # Act
     difference = fields.symmetric_difference(struct._ordered_fields)
@@ -97,6 +97,7 @@ def test_trades_struct() -> None:
     fields.remove("record_size")
     fields.remove("size_hint")
     fields.remove("ts_index")
+    fields.remove("ts_out")
 
     # Act
     difference = fields.symmetric_difference(struct._ordered_fields)
@@ -116,6 +117,7 @@ def test_definition_struct() -> None:
     fields.remove("record_size")
     fields.remove("size_hint")
     fields.remove("ts_index")
+    fields.remove("ts_out")
 
     # Act
     difference = fields.symmetric_difference(struct._ordered_fields)
@@ -135,6 +137,7 @@ def test_imbalance_struct() -> None:
     fields.remove("record_size")
     fields.remove("size_hint")
     fields.remove("ts_index")
+    fields.remove("ts_out")
 
     # Act
     difference = fields.symmetric_difference(struct._ordered_fields)
@@ -154,6 +157,7 @@ def test_statistics_struct() -> None:
     fields.remove("record_size")
     fields.remove("size_hint")
     fields.remove("ts_index")
+    fields.remove("ts_out")
 
     # Act
     difference = fields.symmetric_difference(struct._ordered_fields)
